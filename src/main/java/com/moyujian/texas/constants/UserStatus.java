@@ -9,7 +9,7 @@ public enum UserStatus {
 
     ONLINE(1, "online"),
     GAMING(2, "gaming"),
-    OFFLINE(0, "offline")
+    DISCONNECTED(3, "disconnected")
     ;
 
     private final int serial;

@@ -1,7 +1,7 @@
 package com.moyujian.texas.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.moyujian.texas.constants.Responses;
+import com.moyujian.texas.constants.ResponseStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -28,11 +28,11 @@ public class CommonResponse<T> {
         return new CommonResponse<>(1, "error", null);
     }
 
-    public static <T> CommonResponse<T> get(Responses responses) {
-        return new CommonResponse<>(responses.getStatus(), responses.getMsg(), null);
+    public static <T> CommonResponse<T> get(ResponseStatus responseStatus) {
+        return new CommonResponse<>(responseStatus.getStatus(), responseStatus.getMsg(), null);
     }
 
-    public static <T> CommonResponse<T> get(Responses responses, T data) {
-        return new CommonResponse<>(responses.getStatus(), responses.getMsg(), data);
+    public static <T> CommonResponse<T> get(ResponseStatus responseStatus, T data) {
+        return new CommonResponse<>(responseStatus.getStatus(), responseStatus.getMsg(), data);
     }
 }
