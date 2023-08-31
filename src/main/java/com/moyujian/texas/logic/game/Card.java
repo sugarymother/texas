@@ -1,4 +1,4 @@
-package com.moyujian.texas.logic;
+package com.moyujian.texas.logic.game;
 
 import lombok.Data;
 

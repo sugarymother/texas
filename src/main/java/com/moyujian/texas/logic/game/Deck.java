@@ -1,4 +1,6 @@
-package com.moyujian.texas.logic;
+package com.moyujian.texas.logic.game;
+
+import com.moyujian.texas.logic.game.Card;
 
 import java.util.LinkedList;
 import java.util.Random;

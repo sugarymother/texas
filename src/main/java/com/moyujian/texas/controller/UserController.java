@@ -3,6 +3,7 @@ package com.moyujian.texas.controller;
 import com.moyujian.texas.constants.Constants;
 import com.moyujian.texas.constants.ResponseStatus;
 import com.moyujian.texas.constants.UserStatus;
+import com.moyujian.texas.exception.TokenVerifyException;
 import com.moyujian.texas.logic.User;
 import com.moyujian.texas.request.UserRequest;
 import com.moyujian.texas.response.CommonResponse;
@@ -10,6 +11,7 @@ import com.moyujian.texas.response.UserVo;
 import com.moyujian.texas.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +23,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping(path = "/user")
+@Slf4j
 public class UserController {
 
     private final UserService userService;
@@ -62,7 +65,12 @@ public class UserController {
             }
         }
         // 线上无此用户，用户登录到线上
-        user = User.createFromToken(token);
+        try {
+            user = User.createFromToken(token);
+        } catch (TokenVerifyException e) {
+            log.warn("user token verify failed: {}", token);
+            return CommonResponse.err();
+        }
         userService.login(user);
         response.addCookie(new Cookie(Constants.COOKIE_NAME, user.signToken()));
         return CommonResponse.suc(UserVo.fromUser(user));

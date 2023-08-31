@@ -7,6 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.moyujian.texas.constants.Constants;
 import com.moyujian.texas.constants.UserStatus;
+import com.moyujian.texas.exception.TokenVerifyException;
 import lombok.Data;
 
 import java.util.UUID;
@@ -35,8 +36,13 @@ public class User {
 
     private static final JWTVerifier VERIFIER = JWT.require(Algorithm.HMAC256(Constants.JWT_KEY)).build();
 
-    public static User createFromToken(String token) throws JWTVerificationException {
-        DecodedJWT verified = VERIFIER.verify(token);
+    public static User createFromToken(String token) throws TokenVerifyException {
+        DecodedJWT verified;
+        try {
+            verified = VERIFIER.verify(token);
+        } catch (JWTVerificationException e) {
+            throw new TokenVerifyException(e);
+        }
         User user = new User();
         user.id = verified.getClaim("id").asString();
         user.username = verified.getClaim("username").asString();
