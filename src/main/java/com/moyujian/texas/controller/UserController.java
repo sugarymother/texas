@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -63,16 +66,38 @@ public class UserController {
             } else {
                 return CommonResponse.suc(UserVo.fromUser(user));
             }
+        } else {
+            // 线上无此用户，返回信息使前端走登录流程
+            try {
+                user = User.createFromToken(token);
+            } catch (TokenVerifyException e) {
+                log.warn("user token verify failed: {}", token);
+                return CommonResponse.err();
+            }
+            response.addCookie(new Cookie(Constants.COOKIE_NAME, user.signToken()));
+            return CommonResponse.get(ResponseStatus.NOT_LOGIN, UserVo.fromUser(user));
         }
-        // 线上无此用户，用户登录到线上
-        try {
-            user = User.createFromToken(token);
-        } catch (TokenVerifyException e) {
-            log.warn("user token verify failed: {}", token);
-            return CommonResponse.err();
+    }
+
+    @RequestMapping(method = RequestMethod.POST, path = "/recharge")
+    public CommonResponse<UserVo> recharge(@CookieValue(Constants.COOKIE_NAME) String token,
+                                           HttpServletResponse response) {
+        String id = User.getIdFromToken(token);
+        User user = userService.getUser(id);
+        if (user == null) {
+            return CommonResponse.get(ResponseStatus.NOT_LOGIN);
         }
-        userService.login(user);
+        user.recharge(Constants.DEFAULT_RECHARGE_CHIPS);
         response.addCookie(new Cookie(Constants.COOKIE_NAME, user.signToken()));
         return CommonResponse.suc(UserVo.fromUser(user));
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = "/list")
+    public CommonResponse<List<UserVo>> listOnline() {
+        List<User> userList = userService.getAllUsers();
+        List<UserVo> userVoList = new ArrayList<>();
+        userList.forEach(e -> userVoList.add(UserVo.fromUser(e)));
+        userVoList.sort(Comparator.comparingInt(UserVo::getEarnedChips));
+        return CommonResponse.suc(userVoList);
     }
 }

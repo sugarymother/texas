@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum UserStatus {
 
+    OFFLINE(0, "offline"),
     ONLINE(1, "online"),
     GAMING(2, "gaming"),
     DISCONNECTED(3, "disconnected")

@@ -21,7 +21,9 @@ public class User {
 
     private int chips;
 
-    private UserStatus status = UserStatus.ONLINE;
+    private int rechargeTimes;
+
+    private UserStatus status = UserStatus.OFFLINE;
 
     private User() {}
 
@@ -30,8 +32,14 @@ public class User {
                 .withClaim("id", id)
                 .withClaim("username", username)
                 .withClaim("chips", chips)
+                .withClaim("rechargeTimes", rechargeTimes)
                 .withIssuer(Constants.ISSUE_NAME)
                 .sign(Algorithm.HMAC256(Constants.JWT_KEY));
+    }
+
+    public void recharge(int chipsToRecharge) {
+        chips += chipsToRecharge;
+        rechargeTimes++;
     }
 
     private static final JWTVerifier VERIFIER = JWT.require(Algorithm.HMAC256(Constants.JWT_KEY)).build();
@@ -47,6 +55,7 @@ public class User {
         user.id = verified.getClaim("id").asString();
         user.username = verified.getClaim("username").asString();
         user.chips = verified.getClaim("chips").asInt();
+        user.rechargeTimes = verified.getClaim("rechargeTimes").asInt();
         return user;
     }
 
@@ -59,6 +68,7 @@ public class User {
         user.id = UUID.randomUUID().toString().replace("-", "");
         user.username = username;
         user.chips = chips;
+        user.rechargeTimes = 0;
         return user;
     }
 }

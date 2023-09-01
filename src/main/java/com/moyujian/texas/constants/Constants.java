@@ -9,4 +9,6 @@ public interface Constants {
     String COOKIE_NAME = "texas_token";
 
     int DEFAULT_INIT_CHIPS = 2000;
+
+    int DEFAULT_RECHARGE_CHIPS = 1000;
 }
