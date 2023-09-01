@@ -42,6 +42,10 @@ public class User {
         rechargeTimes++;
     }
 
+    public void consume(int chipsToConsume) {
+        chips -= chipsToConsume;
+    }
+
     private static final JWTVerifier VERIFIER = JWT.require(Algorithm.HMAC256(Constants.JWT_KEY)).build();
 
     public static User createFromToken(String token) throws TokenVerifyException {

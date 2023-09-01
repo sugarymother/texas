@@ -11,4 +11,6 @@ public interface Constants {
     int DEFAULT_INIT_CHIPS = 2000;
 
     int DEFAULT_RECHARGE_CHIPS = 1000;
+
+    int UNLIMITED_LARGE_BET = Integer.MAX_VALUE;
 }
