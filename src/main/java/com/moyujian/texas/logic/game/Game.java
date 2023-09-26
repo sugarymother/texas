@@ -5,7 +5,10 @@ import com.moyujian.texas.logic.User;
 import com.moyujian.texas.response.GameSnapshotVo;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Game {
 
@@ -82,6 +85,17 @@ public class Game {
         }
         List<PlayerArea> winners = checkWinner(notFoldPlayers);
 
+        int avgChips = totalChips / winners.size();
+        int leftChips = totalChips - avgChips;
+        winners.sort(Comparator.comparing(PlayerArea::getBet).reversed());
+        for (PlayerArea winner : winners) {
+            winner.addChips(avgChips + leftChips-- > 0 ? 1 : 0);
+        }
+
+        // 重置所有player
+        for (PlayerArea playerArea : playerAreas) {
+            playerArea.reset();
+        }
     }
 
     public void inTurnOperate() {
@@ -93,6 +107,26 @@ public class Game {
     }
 
     public List<PlayerArea> checkWinner(List<PlayerArea> players) {
-        return null;
+        if (players.size() < 2) {
+            return players;
+        }
+
+        List<PlayerArea> winners = new ArrayList<>();
+        int maxWeight;
+
+        for (PlayerArea player : players) {
+            CardChecker.check(communityArea, player);
+        }
+        players.sort(Comparator.comparing(PlayerArea::getCheckResult).reversed());
+
+        maxWeight = players.get(0).getCheckResult().getWeight();
+        for (PlayerArea player : players) {
+            if (player.getCheckResult().getWeight() == maxWeight) {
+                winners.add(player);
+            } else {
+                break;
+            }
+        }
+        return winners;
     }
 }

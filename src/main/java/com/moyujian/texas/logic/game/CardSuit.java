@@ -1,4 +1,4 @@
-package com.moyujian.texas.constants;
+package com.moyujian.texas.logic.game;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -17,11 +17,15 @@ public class PlayerArea {
 
     private boolean fold = false;
 
+    private boolean allin = false;
+
     private boolean alive = true;
 
     private Card hand1 = null;
 
     private Card hand2 = null;
+
+    private CardChecker.Result checkResult = null;
 
     public PlayerArea(User user, int accessChipsNum) {
         this.user = user;
@@ -34,10 +38,16 @@ public class PlayerArea {
         chips -= bet;
     }
 
+    public void addChips(int chips) {
+        this.chips += chips;
+    }
+
     public void reset() {
         bet = 0;
         fold = false;
+        allin = false;
         hand1 = null;
         hand2 = null;
+        checkResult = null;
     }
 }
