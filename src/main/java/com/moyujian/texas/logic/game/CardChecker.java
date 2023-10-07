@@ -6,8 +6,10 @@ import lombok.Data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class CardChecker {
@@ -144,12 +146,52 @@ public class CardChecker {
 
     private static Result checkStraight(List<Card> cards) {
         //TODO
+        WeightCalculator weightCalculator = new WeightCalculator().setType(CardType.STRAIGHT);
+        List<Card> resultCards = new ArrayList<>();
+
+
         return null;
     }
 
+    /**
+     * 根据判断顺序，已知牌型肯定没有四条
+     */
     private static Result checkThreeOfKind(List<Card> cards) {
-        //TODO
-        return null;
+        WeightCalculator weightCalculator = new WeightCalculator().setType(CardType.THREE_OF_KIND);
+        List<Card> resultCards = new ArrayList<>();
+
+        int maxTok = 0;
+
+        Map<Integer, Integer> numMap = new HashMap<>();
+        for (Card card : cards) {
+            int num = numMap.getOrDefault(card.getNumber(), 0) + 1;
+            if (num >= 3) {
+                maxTok = Math.max(maxTok, card.getNumber());
+                numMap.remove(card.getNumber());
+            } else {
+                numMap.put(card.getNumber(), num);
+            }
+        }
+
+        if (maxTok == 0) {
+            return null;
+        } else {
+            List<Card> highCards = new ArrayList<>();
+            for (Card card : cards) {
+                if (card.getNumber() == maxTok) {
+                    resultCards.add(card);
+                } else {
+                    highCards.add(card);
+                }
+            }
+            highCards.sort(Comparator.reverseOrder());
+            weightCalculator.setDigit5(CardNumber.getWeightBySerial(maxTok))
+                    .setDigit2(CardNumber.getWeightBySerial(highCards.get(0).getNumber()))
+                    .setDigit1(CardNumber.getWeightBySerial(highCards.get(1).getNumber()));
+            resultCards.add(highCards.get(0));
+            resultCards.add(highCards.get(1));
+            return new Result(weightCalculator.calculate(), CardType.THREE_OF_KIND, resultCards);
+        }
     }
 
     /**

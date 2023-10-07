@@ -25,6 +25,8 @@ public class User {
 
     private UserStatus status = UserStatus.OFFLINE;
 
+    private long lastOlineTime = 0;
+
     private User() {}
 
     public String signToken() {

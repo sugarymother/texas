@@ -2,13 +2,12 @@ package com.moyujian.texas.logic.game;
 
 import com.moyujian.texas.constants.UserStatus;
 import com.moyujian.texas.logic.User;
+import com.moyujian.texas.request.OperateModel;
 import com.moyujian.texas.response.GameSnapshotVo;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Game {
 
@@ -26,13 +25,13 @@ public class Game {
 
     private final List<PlayerArea> playerAreas = new ArrayList<>();
 
-    private int loopIdx = 0;
 
-    private int loopNum = 0;
 
-    private int playerIdx = 0;
+    private int nextPlayerIdx = 0;
+    private int nextDealerIdx = 0;
 
     private PlayerArea currentOpPlayer = null;
+    private PlayerArea dealerPlayer = null;
 
     private Game() {}
 
@@ -44,8 +43,13 @@ public class Game {
         game.maxBet = setting.getMaxBet();
         // 设置玩家
         game.players.addAll(players);
-        game.players.forEach(e -> e.setStatus(UserStatus.GAMING));
-        // TODO 考虑若启动时user断线将会产生什么影响，应如何解决
+        game.players.forEach(e -> {
+            if (UserStatus.ONLINE.equals(e.getStatus())) {
+                e.setStatus(UserStatus.GAMING);
+            } else {
+                e.setStatus(UserStatus.DISCONNECTED);
+            }
+        });
         // 初始化玩家区域
         for (User player : game.players) {
             game.playerAreas.add(new PlayerArea(player, game.accessChipsNum));
@@ -55,6 +59,10 @@ public class Game {
     }
 
     public void restart() {
+        // 重置所有player
+        for (PlayerArea playerArea : playerAreas) {
+            playerArea.reset();
+        }
         // 洗牌
         deck.shuffle();
         // 发牌
@@ -66,10 +74,10 @@ public class Game {
         // 公共区清空
         communityArea.clear();
         // 重置指针
-        loopIdx = 0;
-        loopNum = 0;
-        playerIdx = 0;
-        currentOpPlayer = playerAreas.get(0);
+        dealerPlayer = playerAreas.get(nextDealerIdx);
+        currentOpPlayer = dealerPlayer;
+        nextDealerIdx = (nextDealerIdx + 1) % playerAreas.size();
+        nextPlayerIdx = nextDealerIdx;
     }
 
     public void settle() {
@@ -91,22 +99,22 @@ public class Game {
         for (PlayerArea winner : winners) {
             winner.addChips(avgChips + leftChips-- > 0 ? 1 : 0);
         }
-
-        // 重置所有player
-        for (PlayerArea playerArea : playerAreas) {
-            playerArea.reset();
-        }
     }
 
-    public void inTurnOperate() {
-
+    public void inTurnOperate(OperateModel operate) {
+        // TODO
     }
 
     public GameSnapshotVo getSnapshot() {
+        // TODO
         return null;
     }
 
-    public List<PlayerArea> checkWinner(List<PlayerArea> players) {
+    public PlayerArea getCurrentOpPlayer() {
+        return currentOpPlayer;
+    }
+
+    private List<PlayerArea> checkWinner(List<PlayerArea> players) {
         if (players.size() < 2) {
             return players;
         }
@@ -123,6 +131,7 @@ public class Game {
         for (PlayerArea player : players) {
             if (player.getCheckResult().getWeight() == maxWeight) {
                 winners.add(player);
+                player.setWin(true);
             } else {
                 break;
             }

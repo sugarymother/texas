@@ -21,11 +21,15 @@ public class PlayerArea {
 
     private boolean alive = true;
 
+    private boolean leave = false;
+
     private Card hand1 = null;
 
     private Card hand2 = null;
 
     private CardChecker.Result checkResult = null;
+
+    private boolean win = false;
 
     public PlayerArea(User user, int accessChipsNum) {
         this.user = user;
@@ -49,5 +53,6 @@ public class PlayerArea {
         hand1 = null;
         hand2 = null;
         checkResult = null;
+        win = false;
     }
 }
