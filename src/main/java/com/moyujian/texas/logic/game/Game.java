@@ -25,8 +25,6 @@ public class Game {
 
     private final List<PlayerArea> playerAreas = new ArrayList<>();
 
-
-
     private int nextPlayerIdx = 0;
     private int nextDealerIdx = 0;
 
