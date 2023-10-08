@@ -22,7 +22,7 @@ public class CardCheckerTest {
         communityCards.add(new Card(CardNumber.NUM_7, CardSuit.DIAMONDS));
 
         PlayerArea player1 = new PlayerArea();
-        player1.setHand1(new Card(CardNumber.NUM_6, CardSuit.HEARTS));
+        player1.setHand1(new Card(CardNumber.NUM_4, CardSuit.HEARTS));
         player1.setHand2(new Card(CardNumber.NUM_5, CardSuit.HEARTS));
 
         PlayerArea player2 = new PlayerArea();
@@ -50,14 +50,17 @@ public class CardCheckerTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
+        long timeLen = System.currentTimeMillis();
         for (PlayerArea player : players) {
             CardChecker.check(communityCards, player);
         }
+        timeLen = System.currentTimeMillis() - timeLen;
 
         players.sort(Comparator.comparing(PlayerArea::getCheckResult).reversed());
 
         for (PlayerArea player : players) {
             System.out.println(objectMapper.writeValueAsString(player.getCheckResult()));
         }
+        System.out.println("time cost: " + timeLen + "ms");
     }
 }

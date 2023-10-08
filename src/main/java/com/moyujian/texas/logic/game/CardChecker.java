@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -145,12 +146,46 @@ public class CardChecker {
     }
 
     private static Result checkStraight(List<Card> cards) {
-        //TODO
         WeightCalculator weightCalculator = new WeightCalculator().setType(CardType.STRAIGHT);
-        List<Card> resultCards = new ArrayList<>();
+        LinkedList<Card> resultCards = new LinkedList<>();
 
+        int len = 1;
+        LinkedList<Card> cardSeries = new LinkedList<>();
+        int lastNum = cards.get(0).getNumber();
+        cardSeries.addLast(cards.get(0));
+        for (int i = 1, n = cards.size(); i < n; i++) {
+            Card card = cards.get(i);
+            if (card.getNumber() == lastNum + 1) {
+                lastNum++;
+                len++;
+            } else {
+                if (len >= resultCards.size()) {
+                    resultCards.clear();
+                    resultCards.addAll(cardSeries);
+                }
+                len = 1;
+                lastNum = card.getNumber();
+                cardSeries.clear();
+            }
+            cardSeries.addLast(card);
+        }
 
-        return null;
+        if (resultCards.size() < 4) {
+            return null;
+        } else if (resultCards.size() == 4) {
+            Card lastCard = cards.get(cards.size() - 1);
+            if (resultCards.getFirst().getNumber() == CardNumber.NUM_2.getSerial()
+                    && lastCard.getNumber() == CardNumber.NUM_ACE.getSerial()) {
+                resultCards.addFirst(lastCard);
+            }
+            weightCalculator.setDigit5(CardNumber.getWeightBySerial(resultCards.get(1).getNumber()))
+                    .setDigit1(1);
+        } else {
+            resultCards = new LinkedList<>(resultCards.subList(resultCards.size() - 5, resultCards.size()));
+            weightCalculator.setDigit5(CardNumber.getWeightBySerial(resultCards.getFirst().getNumber()))
+                    .setDigit1(2);
+        }
+        return new Result(weightCalculator.calculate(), CardType.STRAIGHT, resultCards);
     }
 
     /**
