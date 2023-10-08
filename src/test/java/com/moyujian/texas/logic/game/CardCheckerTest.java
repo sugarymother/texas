@@ -15,31 +15,31 @@ public class CardCheckerTest {
     @Test
     void testCheck() throws JsonProcessingException {
         List<Card> communityCards = new ArrayList<>();
+        communityCards.add(new Card(CardNumber.NUM_ACE, CardSuit.DIAMONDS));
         communityCards.add(new Card(CardNumber.NUM_ACE, CardSuit.CLUBS));
-        communityCards.add(new Card(CardNumber.NUM_2, CardSuit.DIAMONDS));
-        communityCards.add(new Card(CardNumber.NUM_3, CardSuit.CLUBS));
-        communityCards.add(new Card(CardNumber.NUM_10, CardSuit.SPADES));
-        communityCards.add(new Card(CardNumber.NUM_7, CardSuit.DIAMONDS));
+        communityCards.add(new Card(CardNumber.NUM_3, CardSuit.DIAMONDS));
+        communityCards.add(new Card(CardNumber.NUM_JACK, CardSuit.CLUBS));
+        communityCards.add(new Card(CardNumber.NUM_JACK, CardSuit.HEARTS));
 
         PlayerArea player1 = new PlayerArea();
-        player1.setHand1(new Card(CardNumber.NUM_4, CardSuit.HEARTS));
-        player1.setHand2(new Card(CardNumber.NUM_5, CardSuit.HEARTS));
+        player1.setHand1(new Card(CardNumber.NUM_KING, CardSuit.HEARTS));
+        player1.setHand2(new Card(CardNumber.NUM_QUEEN, CardSuit.DIAMONDS));
 
         PlayerArea player2 = new PlayerArea();
-        player2.setHand1(new Card(CardNumber.NUM_ACE, CardSuit.HEARTS));
-        player2.setHand2(new Card(CardNumber.NUM_ACE, CardSuit.HEARTS));
+        player2.setHand1(new Card(CardNumber.NUM_JACK, CardSuit.SPADES));
+        player2.setHand2(new Card(CardNumber.NUM_JACK, CardSuit.SPADES));
 
         PlayerArea player3 = new PlayerArea();
         player3.setHand1(new Card(CardNumber.NUM_2, CardSuit.HEARTS));
         player3.setHand2(new Card(CardNumber.NUM_3, CardSuit.HEARTS));
 
         PlayerArea player4 = new PlayerArea();
-        player4.setHand1(new Card(CardNumber.NUM_10, CardSuit.HEARTS));
-        player4.setHand2(new Card(CardNumber.NUM_6, CardSuit.HEARTS));
+        player4.setHand1(new Card(CardNumber.NUM_10, CardSuit.DIAMONDS));
+        player4.setHand2(new Card(CardNumber.NUM_6, CardSuit.DIAMONDS));
 
         PlayerArea player5 = new PlayerArea();
-        player5.setHand1(new Card(CardNumber.NUM_2, CardSuit.HEARTS));
-        player5.setHand2(new Card(CardNumber.NUM_2, CardSuit.HEARTS));
+        player5.setHand1(new Card(CardNumber.NUM_ACE, CardSuit.HEARTS));
+        player5.setHand2(new Card(CardNumber.NUM_ACE, CardSuit.SPADES));
 
         List<PlayerArea> players = new ArrayList<>();
         players.add(player1);

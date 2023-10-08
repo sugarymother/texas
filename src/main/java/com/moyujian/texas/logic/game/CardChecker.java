@@ -26,7 +26,7 @@ public class CardChecker {
         FULL_HOUSE("full house", 6),
         FOUR_OF_KIND("four of kind", 7),
         STRAIGHT_FLUSH("STRAIGHT FLUSH", 8),
-        ROYAL_FLUSH("!! ROYAL FLUSH !!", 9),
+        ROYAL_FLUSH("ROYAL FLUSH", 9),
         ;
 
         private final String type;
@@ -122,27 +122,137 @@ public class CardChecker {
             result = checkHighCard(allCards);
         }
 
+        if (!CardType.STRAIGHT.type.equals(result.type)
+                && !CardType.STRAIGHT_FLUSH.type.equals(result.type)
+                && !CardType.ROYAL_FLUSH.type.equals(result.type)) {
+            result.getCards().sort(Comparator.naturalOrder());
+        }
         player.setCheckResult(result);
     }
 
     private static Result checkFourOfKind(List<Card> cards) {
-        //TODO
-        return null;
+        WeightCalculator weightCalculator = new WeightCalculator().setType(CardType.FOUR_OF_KIND);
+        List<Card> resultCards = new ArrayList<>();
+
+        Map<Integer, Integer> numberMap = new HashMap<>();
+        for (Card card : cards) {
+            numberMap.put(card.getNumber(), numberMap.getOrDefault(card.getNumber(), 0) + 1);
+        }
+        int maxQuaCard = 0;
+        for (Map.Entry<Integer, Integer> entry : numberMap.entrySet()) {
+            if (entry.getValue() == 4) {
+                maxQuaCard = entry.getKey();
+                break;
+            }
+        }
+
+        if (maxQuaCard == 0) {
+            return null;
+        }
+
+        List<Card> highCards = new ArrayList<>();
+        for (Card card : cards) {
+            if (card.getNumber() == maxQuaCard) {
+                resultCards.add(card);
+            } else {
+                highCards.add(card);
+            }
+        }
+        resultCards.sort(Comparator.reverseOrder());
+        @SuppressWarnings("all")
+        Card maxHighCard = highCards.stream().max(Card::compareTo).get();
+        weightCalculator.setDigit5(CardNumber.getWeightBySerial(maxQuaCard))
+                .setDigit1(CardNumber.getWeightBySerial(maxHighCard.getNumber()));
+        resultCards.add(maxHighCard);
+        resultCards.sort(Comparator.naturalOrder());
+
+        return new Result(weightCalculator.calculate(), CardType.FOUR_OF_KIND, resultCards);
     }
 
     private static Result checkFullHouse(List<Card> cards) {
-        //TODO
-        return null;
+        WeightCalculator weightCalculator = new WeightCalculator().setType(CardType.FULL_HOUSE);
+        List<Card> resultCards = new ArrayList<>();
+
+        Map<Integer, Integer> numberMap = new HashMap<>();
+        for (Card card : cards) {
+            numberMap.put(card.getNumber(), numberMap.getOrDefault(card.getNumber(), 0) + 1);
+        }
+        int maxDouCard = 0;
+        int maxTriCard = 0;
+        for (Map.Entry<Integer, Integer> entry : numberMap.entrySet()) {
+            if (entry.getValue() == 2) {
+                maxDouCard = Math.max(maxDouCard, entry.getKey());
+            } else if (entry.getValue() == 3) {
+                maxTriCard = Math.max(maxTriCard, entry.getKey());
+            }
+        }
+
+        if (maxDouCard == 0 || maxTriCard == 0) {
+            return null;
+        }
+
+        for (Card card : cards) {
+            if (card.getNumber() == maxDouCard || card.getNumber() == maxTriCard) {
+                resultCards.add(card);
+            }
+        }
+        resultCards.sort(Comparator.naturalOrder());
+
+        weightCalculator.setDigit5(CardNumber.getWeightBySerial(maxTriCard))
+                .setDigit4(CardNumber.getWeightBySerial(maxDouCard));
+
+        return new Result(weightCalculator.calculate(), CardType.FULL_HOUSE, resultCards);
     }
 
     private static Result checkStraightFlushOrRoyalFlush(List<Card> cards) {
-        //TODO
-        return null;
+        WeightCalculator weightCalculator = new WeightCalculator();
+        CardType type;
+        List<Card> resultCards = collectMostSameSuitCards(cards);
+        if (resultCards.size() < 5) {
+            return null;
+        }
+        resultCards.sort(Comparator.naturalOrder());
+
+        Result checkStraightResult = checkStraight(resultCards);
+        if (checkStraightResult == null) {
+            return null;
+        }
+        resultCards = checkStraightResult.cards;
+
+        if (resultCards.get(0).getNumber() == CardNumber.NUM_10.getSerial()) {
+            type = CardType.ROYAL_FLUSH;
+            weightCalculator.setType(type);
+        } else {
+            type = CardType.STRAIGHT_FLUSH;
+            if (resultCards.get(0).getNumber() == CardNumber.NUM_ACE.getSerial()) {
+                weightCalculator.setType(type)
+                        .setDigit5(CardNumber.getWeightBySerial(resultCards.get(1).getNumber()))
+                        .setDigit1(1);
+            } else {
+                weightCalculator.setType(type)
+                        .setDigit5(CardNumber.getWeightBySerial(resultCards.get(0).getNumber()))
+                        .setDigit1(2);
+            }
+        }
+
+        return new Result(weightCalculator.calculate(), type, resultCards);
     }
 
     private static Result checkFlush(List<Card> cards) {
-        //TODO
-        return null;
+        WeightCalculator weightCalculator = new WeightCalculator().setType(CardType.FLUSH);
+        List<Card> resultCards = collectMostSameSuitCards(cards);
+        if (resultCards.size() < 5) {
+            return null;
+        }
+        resultCards.sort(Comparator.reverseOrder());
+        resultCards = resultCards.subList(0, 5);
+        weightCalculator.setDigit5(CardNumber.getWeightBySerial(resultCards.get(0).getNumber()))
+                .setDigit4(CardNumber.getWeightBySerial(resultCards.get(1).getNumber()))
+                .setDigit3(CardNumber.getWeightBySerial(resultCards.get(2).getNumber()))
+                .setDigit2(CardNumber.getWeightBySerial(resultCards.get(3).getNumber()))
+                .setDigit1(CardNumber.getWeightBySerial(resultCards.get(4).getNumber()));
+
+        return new Result(weightCalculator.calculate(), CardType.FLUSH, resultCards);
     }
 
     private static Result checkStraight(List<Card> cards) {
@@ -169,6 +279,10 @@ public class CardChecker {
             }
             cardSeries.addLast(card);
         }
+        if (len >= resultCards.size()) {
+            resultCards.clear();
+            resultCards.addAll(cardSeries);
+        }
 
         if (resultCards.size() < 4) {
             return null;
@@ -177,9 +291,11 @@ public class CardChecker {
             if (resultCards.getFirst().getNumber() == CardNumber.NUM_2.getSerial()
                     && lastCard.getNumber() == CardNumber.NUM_ACE.getSerial()) {
                 resultCards.addFirst(lastCard);
+                weightCalculator.setDigit5(CardNumber.getWeightBySerial(resultCards.get(1).getNumber()))
+                        .setDigit1(1);
+            } else {
+                return null;
             }
-            weightCalculator.setDigit5(CardNumber.getWeightBySerial(resultCards.get(1).getNumber()))
-                    .setDigit1(1);
         } else {
             resultCards = new LinkedList<>(resultCards.subList(resultCards.size() - 5, resultCards.size()));
             weightCalculator.setDigit5(CardNumber.getWeightBySerial(resultCards.getFirst().getNumber()))
@@ -305,5 +421,27 @@ public class CardChecker {
                 .setDigit1(CardNumber.getWeightBySerial(resultCards.get(4).getNumber()))
                 .calculate();
         return new Result(weight, CardType.HIGH_CARD, resultCards);
+    }
+
+    private static List<Card> collectMostSameSuitCards(List<Card> cards) {
+        List<Card> sameSuitCards = new ArrayList<>();
+        Map<Integer, Integer> suitMap = new HashMap<>();
+        for (Card card : cards) {
+            suitMap.put(card.getSuit(), suitMap.getOrDefault(card.getSuit(), 0) + 1);
+        }
+        int maxSuitNum = 0;
+        int maxSuit = 0;
+        for (Map.Entry<Integer, Integer> entry : suitMap.entrySet()) {
+            if (entry.getValue() > maxSuitNum) {
+                maxSuitNum = entry.getValue();
+                maxSuit = entry.getKey();
+            }
+        }
+        for (Card card : cards) {
+            if (card.getSuit() == maxSuit) {
+                sameSuitCards.add(card);
+            }
+        }
+        return sameSuitCards;
     }
 }

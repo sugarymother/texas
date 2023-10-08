@@ -27,6 +27,8 @@ public class PlayerArea {
 
     private Card hand2 = null;
 
+    private OperateType lastOperate = null;
+
     private CardChecker.Result checkResult = null;
 
     private boolean win = false;
@@ -52,6 +54,7 @@ public class PlayerArea {
         allin = false;
         hand1 = null;
         hand2 = null;
+        lastOperate = null;
         checkResult = null;
         win = false;
     }
