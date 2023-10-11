@@ -1,30 +1,34 @@
 package com.moyujian.texas.service;
 
 import com.moyujian.texas.logic.User;
-import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service("userService")
 public class UserService {
 
-    private static final ConcurrentHashMap<String, User> onlineUserMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, User> USER_MAP = new ConcurrentHashMap<>();
 
-    public void login(User user) {
-        onlineUserMap.put(user.getId(), user);
+    public static void login(User user) {
+        USER_MAP.put(user.getId(), user);
     }
 
-    public void logout(String id) {
-        onlineUserMap.remove(id);
+    public static void remove(String id) {
+        USER_MAP.remove(id);
     }
 
-    public User getUser(String id) {
-        return onlineUserMap.get(id);
+    public static User getUser(String id) {
+        return USER_MAP.get(id);
     }
 
-    public List<User> getAllUsers() {
-        return onlineUserMap.values().stream().toList();
+    public static User getUserBySeries(String series) {
+        return USER_MAP.values().stream()
+                .filter(e -> e.getOnlineSeries().equals(series))
+                .findFirst().orElse(null);
+    }
+
+    public static List<User> getAllUsers() {
+        return USER_MAP.values().stream().toList();
     }
 }

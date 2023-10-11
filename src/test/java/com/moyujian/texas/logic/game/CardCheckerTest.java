@@ -1,7 +1,7 @@
 package com.moyujian.texas.logic.game;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moyujian.texas.utils.JsonConvertUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -48,8 +48,6 @@ public class CardCheckerTest {
         players.add(player4);
         players.add(player5);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         long timeLen = System.currentTimeMillis();
         for (PlayerArea player : players) {
             CardChecker.check(communityCards, player);
@@ -59,7 +57,7 @@ public class CardCheckerTest {
         players.sort(Comparator.comparing(PlayerArea::getCheckResult).reversed());
 
         for (PlayerArea player : players) {
-            System.out.println(objectMapper.writeValueAsString(player.getCheckResult()));
+            System.out.println(JsonConvertUtil.toJSON(player.getCheckResult()));
         }
         System.out.println("time cost: " + timeLen + "ms");
     }

@@ -8,8 +8,9 @@ import lombok.Getter;
 public enum ResponseStatus {
 
     NOT_SINGED(101, "未创建，请创建用户"),
-    NOT_LOGIN(102, "未登入，请连线"),
-    IN_GAME(103, "用户正在game中，请重连"),
+    NOT_CONNECTED(102, "未连接，请连入"),
+    ERROR_OCCURRED(105, "连接发生错误"),
+    OLD_CONNECT_ABORT(106, "已在其他地址重新连接，当前连接已断开")
     ;
 
     private final int status;

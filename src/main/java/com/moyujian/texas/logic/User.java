@@ -6,7 +6,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.moyujian.texas.constants.Constants;
-import com.moyujian.texas.constants.UserStatus;
 import com.moyujian.texas.exception.TokenVerifyException;
 import lombok.Data;
 
@@ -25,7 +24,9 @@ public class User {
 
     private UserStatus status = UserStatus.OFFLINE;
 
-    private long lastOlineTime = 0;
+    private long statusUpdatedTime = 0;
+
+    private String onlineSeries;
 
     private User() {}
 
@@ -46,6 +47,15 @@ public class User {
 
     public void consume(int chipsToConsume) {
         chips -= chipsToConsume;
+    }
+
+    public void earn(int chipsToEarn) {
+        chips += chipsToEarn;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+        statusUpdatedTime = System.currentTimeMillis();
     }
 
     private static final JWTVerifier VERIFIER = JWT.require(Algorithm.HMAC256(Constants.JWT_KEY)).build();

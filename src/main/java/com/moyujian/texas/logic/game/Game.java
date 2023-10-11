@@ -1,6 +1,6 @@
 package com.moyujian.texas.logic.game;
 
-import com.moyujian.texas.constants.UserStatus;
+import com.moyujian.texas.logic.UserStatus;
 import com.moyujian.texas.logic.User;
 import com.moyujian.texas.request.OperateModel;
 import com.moyujian.texas.response.GameSnapshotVo;

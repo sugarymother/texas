@@ -8,11 +8,8 @@ import org.springframework.beans.BeanUtils;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserVo {
-
+public class UserListVo {
     private String id;
-
-    private String onlineSeries;
 
     private String username;
 
@@ -24,13 +21,13 @@ public class UserVo {
 
     private String status;
 
-    public static UserVo fromUser(User user) {
-        UserVo userVo = new UserVo();
-        BeanUtils.copyProperties(user, userVo);
-        userVo.earnedChips = userVo.chips
-                - userVo.rechargeTimes * Constants.DEFAULT_RECHARGE_CHIPS
+    public static UserListVo fromUser(User user) {
+        UserListVo userListVo = new UserListVo();
+        BeanUtils.copyProperties(user, userListVo);
+        userListVo.earnedChips = userListVo.chips
+                - userListVo.rechargeTimes * Constants.DEFAULT_RECHARGE_CHIPS
                 - Constants.DEFAULT_INIT_CHIPS;
-        userVo.status = user.getStatus().getStatus();
-        return userVo;
+        userListVo.status = user.getStatus().getStatus();
+        return userListVo;
     }
 }
