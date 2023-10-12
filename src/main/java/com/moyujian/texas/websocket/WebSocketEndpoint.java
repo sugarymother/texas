@@ -4,6 +4,8 @@ import com.moyujian.texas.constants.ResponseStatus;
 import com.moyujian.texas.constants.WsOperateType;
 import com.moyujian.texas.logic.UserStatus;
 import com.moyujian.texas.logic.User;
+import com.moyujian.texas.request.OperateModel;
+import com.moyujian.texas.request.WsRequest;
 import com.moyujian.texas.response.WsResponse;
 import com.moyujian.texas.service.UserService;
 import com.moyujian.texas.utils.JsonConvertUtil;
@@ -54,11 +56,10 @@ public class WebSocketEndpoint {
 
         if (UserStatus.DISCONNECTED.equals(user.getStatus())) {
             user.setStatus(UserStatus.GAMING);
-
-            // TODO 重连
-        } else {
+            sendMessage(new WsResponse<>(WsOperateType.RECONNECT_INTO_GAME));
+        } else if (UserStatus.OFFLINE.equals(user.getStatus())) {
             user.setStatus(UserStatus.ONLINE);
-            sendMessageByUsers(new WsResponse<>(WsOperateType.FLUSH_USER_LIST), List.of(user));
+            sendMessage(new WsResponse<>(WsOperateType.FLUSH_USER_LIST));
         }
     }
 
@@ -66,7 +67,22 @@ public class WebSocketEndpoint {
     public void onMessage(String message, Session session) {
         log.debug("[ws] msg received, session: {}, msg: {}, user: {}",
                 session.getId(), message, JsonConvertUtil.toJSON(user));
-
+        WsRequest<?> request = JsonConvertUtil.fromJSON(message, WsRequest.class);
+        WsOperateType wsOperateType = WsOperateType.getBySerial(request.getType());
+        if (wsOperateType == null) {
+            log.error("ws msg type is unexpected, type: {}", request.getType());
+            return;
+        }
+        switch (wsOperateType) {
+            case OPERATE -> {
+                @SuppressWarnings("all")
+                WsRequest<OperateModel> operateRequest = (WsRequest<OperateModel>) request;
+                // TODO
+            }
+            case GET_GAME_SNAPSHOT -> {
+                // TODO
+            }
+        }
     }
 
     @OnError
@@ -86,6 +102,7 @@ public class WebSocketEndpoint {
         if (user != null) {
             if (UserStatus.GAMING.equals(user.getStatus())) {
                 user.setStatus(UserStatus.DISCONNECTED);
+                // TODO 断连，使game代操作
             } else {
                 user.setStatus(UserStatus.OFFLINE);
             }
