@@ -1,7 +1,7 @@
 package com.moyujian.texas.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moyujian.texas.constants.WsOperateType;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
@@ -9,6 +9,7 @@ public class WsResponse<T> {
 
     private int type;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private T data;
 
     public WsResponse(WsOperateType type) {

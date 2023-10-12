@@ -80,11 +80,12 @@ public class UserController {
             return CommonResponse.get(ResponseStatus.NOT_CONNECTED);
         }
         user.recharge(Constants.DEFAULT_RECHARGE_CHIPS);
-        response.addCookie(new Cookie(Constants.COOKIE_NAME, user.signToken()));
+
+        setCookie(user, response);
         return CommonResponse.suc(UserVo.fromUser(user));
     }
 
-    @RequestMapping(method = RequestMethod.GET, path = "/list")
+    @RequestMapping(method = RequestMethod.POST, path = "/list")
     public CommonResponse<List<UserListVo>> listOnlineUsers() {
         List<User> userList = UserService.getAllUsers();
         List<UserListVo> userVoList = new ArrayList<>();

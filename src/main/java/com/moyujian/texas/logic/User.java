@@ -24,7 +24,7 @@ public class User {
 
     private UserStatus status = UserStatus.OFFLINE;
 
-    private long statusUpdatedTime = 0;
+    private long statusUpdatedTime;
 
     private String onlineSeries;
 
@@ -53,8 +53,13 @@ public class User {
         chips += chipsToEarn;
     }
 
-    public void setStatus(UserStatus status) {
+    public synchronized void setStatus(UserStatus status) {
         this.status = status;
+        statusUpdatedTime = System.currentTimeMillis();
+    }
+
+    public synchronized void setOnlineSeries(String onlineSeries) {
+        this.onlineSeries = onlineSeries;
         statusUpdatedTime = System.currentTimeMillis();
     }
 

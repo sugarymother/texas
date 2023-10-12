@@ -81,17 +81,17 @@
 <script type="text/javascript">
     $(function () {
         // binding event
-        $('#testBtn').on('click', function (e) {
-            window.location.href='./game'
+        $('#rechargeBtn').on('click', function (e) {
+            if (confirm("kneel down and beg moyujian to give you more coins?")) {
+                rechargeRequest(function (resp) {
+                    setSelfUser(resp.data)
+                })
+            }
         })
 
         let user
         function init(userData) {
-            user = userData
-            $('#selfUser .username').text(user.username)
-            $('#selfUser .coin').text(user.chips)
-            $('#selfUser .earned').text(user.earnedChips)
-            $('#selfUser .recharge_times').text(user.rechargeTimes)
+            setSelfUser(userData)
 
             // open connection
             onlineSeries = userData.onlineSeries
@@ -109,8 +109,17 @@
             })
         }
 
+        function setSelfUser(userData) {
+            user = userData
+            $('#selfUser .username').text(user.username)
+            $('#selfUser .coin').text(user.chips)
+            $('#selfUser .earned').text(user.earnedChips)
+            $('#selfUser .recharge_times').text(user.rechargeTimes)
+        }
+
         function refreshUserList() {
             let userList = $('.user_list')
+            userList.children().remove()
             getAllUserRequest(function (resp) {
                 for (const userData of resp.data) {
                     let newItem = $(

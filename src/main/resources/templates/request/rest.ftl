@@ -8,13 +8,13 @@
     const NOT_SINGED = 101
     const NOT_CONNECTED = 102
 
-    function refreshRequest(callback, errCallback) {
+    function postRequest(url, data, callback, errCallback) {
         $.ajax({
             type: 'POST',
-            url: restUrlPrefix + 'user/refresh',
+            url: restUrlPrefix + url,
             contentType: 'application/json',
             dataType: 'json',
-            data: {},
+            data: JSON.stringify(data),
             xhrFields: {
                 withCredentials: true
             },
@@ -26,47 +26,21 @@
                 errCallback(e)
             }
         })
+    }
+
+    function refreshRequest(callback, errCallback) {
+        postRequest('user/refresh', {}, callback, errCallback)
     }
 
     function signRequest(username, callback, errCallback) {
-        $.ajax({
-            type: 'POST',
-            url: restUrlPrefix + 'user/sign',
-            contentType: 'application/json',
-            dataType: 'json',
-            data: JSON.stringify({
-                "username": username
-            }),
-            xhrFields: {
-                withCredentials: true
-            },
-            success: function(response) {
-                callback(response)
-            },
-            error: function(e){
-                console.error(e)
-                errCallback(e)
-            }
-        })
+        postRequest('user/sign', {"username": username}, callback, errCallback)
+    }
+
+    function rechargeRequest(callback, errCallback) {
+        postRequest('user/recharge', {}, callback, errCallback)
     }
 
     function getAllUserRequest(callback, errCallback) {
-        $.ajax({
-            type: 'GET',
-            url: restUrlPrefix + 'user/list',
-            contentType: 'application/json',
-            dataType: 'json',
-            data: {},
-            xhrFields: {
-                withCredentials: true
-            },
-            success: function(response) {
-                callback(response)
-            },
-            error: function(e){
-                console.error(e)
-                errCallback(e)
-            }
-        })
+        postRequest('user/list', {}, callback, errCallback)
     }
 </script>
