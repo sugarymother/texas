@@ -10,6 +10,7 @@ import com.moyujian.texas.response.UserListVo;
 import com.moyujian.texas.response.UserVo;
 import com.moyujian.texas.service.UserService;
 import com.moyujian.texas.utils.IpUtil;
+import com.moyujian.texas.utils.Md5Util;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,7 +41,7 @@ public class UserController {
         }
         User user = User.createNew(username, Constants.DEFAULT_INIT_CHIPS);
         UserService.login(user);
-        user.setOnlineSeries(IpUtil.getIp(request));
+        user.setOnlineSeries(Md5Util.getMd5Hex(IpUtil.getIp(request) + System.currentTimeMillis()));
 
         setCookie(user, response);
         return CommonResponse.suc(UserVo.fromUser(user));
@@ -65,7 +66,7 @@ public class UserController {
             }
             UserService.login(user);
         }
-        user.setOnlineSeries(IpUtil.getIp(request));
+        user.setOnlineSeries(Md5Util.getMd5Hex(IpUtil.getIp(request) + System.currentTimeMillis()));
 
         setCookie(user, response);
         return CommonResponse.suc(UserVo.fromUser(user));
