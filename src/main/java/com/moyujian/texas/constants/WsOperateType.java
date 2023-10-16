@@ -9,6 +9,7 @@ public enum WsOperateType {
 
     OPERATE(1),
     GET_GAME_SNAPSHOT(2),
+    LEAVE_AFTER_DIE(3),
 
     FLUSH_GAME_SNAPSHOT(11),
     RECONNECT_INTO_GAME(12),

@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class GameSetting {
 
-    private int accessChipsNum = 350;
+    private int accessChipsNum = 360;
 
     private int minLargeBet = 10;
 

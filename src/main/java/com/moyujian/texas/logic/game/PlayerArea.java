@@ -44,6 +44,12 @@ public class PlayerArea {
         chips -= bet;
     }
 
+    public void die() {
+        alive = false;
+        user.earn(chips);
+        chips = 0;
+    }
+
     public void addChips(int chips) {
         this.chips += chips;
     }
