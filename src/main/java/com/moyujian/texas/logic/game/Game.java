@@ -4,8 +4,11 @@ import com.moyujian.texas.logic.User;
 import com.moyujian.texas.logic.UserStatus;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.IntPredicate;
 
 public class Game {
 
@@ -26,6 +29,7 @@ public class Game {
 
     private PlayerArea currentOpPlayer = null;
     private PlayerArea dealerPlayer = null;
+    private PlayerArea endingPlayer = null;
 
     private int roundBet = 0;
 
@@ -90,6 +94,7 @@ public class Game {
             nextDealerIdx = (nextDealerIdx + 1) % playerAreas.size();
         } while (!playerAreas.get(nextDealerIdx).isAlive());
         nextPlayerIdx = nextDealerIdx;
+        endingPlayer = dealerPlayer;
 
         // 跳过preflop
         round = FLOP_ROUND;
@@ -107,7 +112,9 @@ public class Game {
         }
     }
 
-    public void settle() {
+    private void settle() {
+        turnEnd = true;
+
         int totalChips = 0;
         List<PlayerArea> notFoldPlayers = new ArrayList<>();
         for (PlayerArea playerArea : playerAreas) {
@@ -149,41 +156,99 @@ public class Game {
         }
     }
 
-    public void inTurnOperate(OperateType operateType, int chipsNum) {
-        switch (operateType) {
+    public void inTurnOperate(Operate operate) {
+        switch (operate.getOperateType()) {
             case CHECK, CALL -> checkAndCallOperate();
-            case RAISE -> raiseOperate(chipsNum);
+            case RAISE -> raiseOperate(operate.getOperateChips());
             case ALLIN -> allinOperate();
             case FOLD -> foldOperate();
         }
-        currentOpPlayer.setLastOperate(operateType);
+        currentOpPlayer.setLastOperate(operate.getOperateType());
 
         if (!playerNext()) {
             // 圈结束
             if (accessiblePlayerNum() <= 1) {
                 // 如果全部player无操作，直接结束轮
-                turnEnd();
+                settle();
             } else if (!roundNext()) {
                 // 轮结束
-                turnEnd();
+                settle();
             }
         } else if (accessiblePlayerNum() <= 1) {
             // 只剩最后一个可操作player，直接结束轮
-            turnEnd();
+            settle();
         } else if (UserStatus.DISCONNECTED.equals(currentOpPlayer.getUser().getStatus())) {
             // 下个操作player掉线，自动fold
-            inTurnOperate(OperateType.FOLD, 0);
+            inTurnOperate(new Operate(OperateType.FOLD));
         }
     }
 
     public GameSnapshot getSnapshot() {
-        // TODO
-        return null;
+        GameSnapshot gameSnapshot = new GameSnapshot();
+        gameSnapshot.setPlayers(playerAreas.stream()
+                .map(GameSnapshot.PlayerSnapshot::fromPlayerArea)
+                .toList());
+        gameSnapshot.setPublicCards(communityArea.stream()
+                .map(GameSnapshot.CardSnapshot::fromCard)
+                .toList());
+        if (round == FLOP_ROUND) {
+            gameSnapshot.setRound("flop round");
+        } else if (round == TURN_ROUND) {
+            gameSnapshot.setRound("turn round");
+        } else if (round == RIVER_ROUND) {
+            gameSnapshot.setRound("river round");
+        }
+        gameSnapshot.setCurrentPlayerIdx(playerAreas.indexOf(currentOpPlayer));
+        return gameSnapshot;
     }
 
-    public AccessibleOperate getCurrentUserAccessibleOperate() {
-        // TODO
-        return null;
+    public List<Operate> getCurrentUserAccessibleOperate() {
+        List<Operate> accessibleOperateList = new ArrayList<>();
+
+        int chips = currentOpPlayer.getChips();
+        int currBet = currentOpPlayer.getBet();
+        int diffBet = totalBet - currBet;
+
+        // 检查是否满足check, call
+        if (chips >= diffBet) {
+            if (roundBet == 0) {
+                // 满足 check
+                accessibleOperateList.add(new Operate(OperateType.CHECK, new int[]{diffBet}));
+            } else {
+                // 满足 call
+                accessibleOperateList.add(new Operate(OperateType.CALL, new int[]{diffBet}));
+            }
+
+            // 检查是否满足raise
+            if (chips >= diffBet + roundBet) {
+                List<Integer> accessibleChipsList = new ArrayList<>();
+                for (int raiseBet = roundBet; raiseBet + diffBet <= chips && raiseBet <= maxBet; raiseBet += 10) {
+                    accessibleChipsList.add(raiseBet + diffBet);
+                }
+                int[] accessibleChips = accessibleChipsList.stream().mapToInt(Integer::intValue).toArray();
+                accessibleOperateList.add(new Operate(OperateType.RAISE, accessibleChips));
+            }
+        }
+
+        accessibleOperateList.add(new Operate(OperateType.ALLIN, new int[]{chips}));
+        accessibleOperateList.add(new Operate(OperateType.FOLD, new int[0]));
+        return accessibleOperateList;
+    }
+
+    public boolean checkOperate(Operate operate) {
+        List<Operate> currentUserAccessibleOperateList = getCurrentUserAccessibleOperate();
+        Optional<Operate> operateOp = currentUserAccessibleOperateList.stream()
+                .filter(e -> e.getOperateType().equals(operate.getOperateType()))
+                .findFirst();
+        if (operateOp.isPresent()) {
+            if (operateOp.get().getOperateType().equals(OperateType.FOLD)) {
+                return true;
+            }
+            int[] accessibleChips = operateOp.get().getAccessibleChips();
+            return Arrays.stream(accessibleChips).anyMatch(e -> e == operate.getOperateChips());
+        } else {
+            return false;
+        }
     }
 
     public PlayerArea getCurrentOpPlayer() {
@@ -217,8 +282,7 @@ public class Game {
 
     private boolean playerNext() {
         PlayerArea nextPlayer = playerAreas.get(nextPlayerIdx);
-        if (nextPlayer.equals(dealerPlayer)) {
-            // TODO 考虑bet未追平情况
+        if (nextPlayer.equals(endingPlayer)) {
             return false;
         }
         currentOpPlayer = nextPlayer;
@@ -233,6 +297,7 @@ public class Game {
 
     private boolean roundNext() {
         roundBet = 0;
+        endingPlayer = dealerPlayer;
         return ++round <= RIVER_ROUND;
     }
 
@@ -245,6 +310,7 @@ public class Game {
         roundBet += raiseBet;
         currentOpPlayer.placeBet(bet);
         totalBet = currentOpPlayer.getBet();
+        endingPlayer = currentOpPlayer;
     }
 
     private void foldOperate() {
@@ -263,10 +329,6 @@ public class Game {
 
     private void gameOver() {
         gameOver = true;
-    }
-
-    private void turnEnd() {
-        turnEnd = false;
     }
 
     public boolean isGameOver() {

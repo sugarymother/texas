@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum CardNumber {
 
+    UNKNOWN(0, "?", 0),
     NUM_2(2, "2", 1),
     NUM_3(3, "3", 2),
     NUM_4(4, "4", 3),
@@ -28,5 +29,14 @@ public enum CardNumber {
 
     public static int getWeightBySerial(int serial) {
         return serial - 1;
+    }
+
+    public static CardNumber getBySerial(int serial) {
+        for (CardNumber cardNumber : CardNumber.values()) {
+            if (cardNumber.serial == serial) {
+                return cardNumber;
+            }
+        }
+        return UNKNOWN;
     }
 }

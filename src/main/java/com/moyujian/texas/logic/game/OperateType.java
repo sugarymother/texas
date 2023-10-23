@@ -7,14 +7,15 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum OperateType {
 
-    CHECK(1),
-    CALL(2),
-    RAISE(3),
-    FOLD(4),
-    ALLIN(5)
+    CHECK(1, "check"),
+    CALL(2, "call"),
+    RAISE(3, "raise"),
+    FOLD(4, "fold"),
+    ALLIN(5, "allin")
     ;
 
     private final int serial;
+    private final String type;
 
     public static OperateType getBySerial(int serial) {
         for (OperateType operateType : OperateType.values()) {

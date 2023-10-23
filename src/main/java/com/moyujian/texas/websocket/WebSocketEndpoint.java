@@ -102,7 +102,6 @@ public class WebSocketEndpoint {
         if (user != null) {
             if (UserStatus.GAMING.equals(user.getStatus())) {
                 user.setStatus(UserStatus.DISCONNECTED);
-                // TODO 断连，使game代操作
             } else {
                 user.setStatus(UserStatus.OFFLINE);
             }

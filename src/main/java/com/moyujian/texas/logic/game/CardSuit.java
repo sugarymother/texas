@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum CardSuit {
     //Hearts, Diamonds, Clubs, Spades
+    UNKNOWN(0, "?"),
     HEARTS(1, "♥"),
     DIAMONDS(2, "♦"),
     CLUBS(3, "♣"),
@@ -15,4 +16,13 @@ public enum CardSuit {
 
     private final int serial;
     private final String suit;
+
+    public static CardSuit getBySerial(int serial) {
+        for (CardSuit cardSuit : CardSuit.values()) {
+            if (cardSuit.serial == serial) {
+                return cardSuit;
+            }
+        }
+        return UNKNOWN;
+    }
 }
