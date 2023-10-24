@@ -8,9 +8,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.IntPredicate;
+import java.util.UUID;
 
 public class Game {
+
+    private final String id = UUID.randomUUID().toString().replace("-", "");
+
+    private long updatedTime = System.currentTimeMillis();
 
     private int accessChipsNum;
 
@@ -41,9 +45,9 @@ public class Game {
 
     private boolean turnEnd = false;
 
-    public static final int FLOP_ROUND = 0;
-    public static final int TURN_ROUND = 1;
-    public static final int RIVER_ROUND = 2;
+    private static final int FLOP_ROUND = 0;
+    private static final int TURN_ROUND = 1;
+    private static final int RIVER_ROUND = 2;
 
     private Game() {}
 
@@ -62,6 +66,7 @@ public class Game {
             } else {
                 player.setStatus(UserStatus.DISCONNECTED);
             }
+            player.setGameId(game.id);
             game.playerAreas.add(new PlayerArea(player, game.accessChipsNum));
         }
 
@@ -164,6 +169,7 @@ public class Game {
             case FOLD -> foldOperate();
         }
         currentOpPlayer.setLastOperate(operate.getOperateType());
+        updatedTime = System.currentTimeMillis();
 
         if (!playerNext()) {
             // 圈结束
@@ -183,7 +189,7 @@ public class Game {
         }
     }
 
-    public GameSnapshot getSnapshot() {
+    public GameSnapshot getSnapshot(User user) {
         GameSnapshot gameSnapshot = new GameSnapshot();
         gameSnapshot.setPlayers(playerAreas.stream()
                 .map(GameSnapshot.PlayerSnapshot::fromPlayerArea)
@@ -199,7 +205,37 @@ public class Game {
             gameSnapshot.setRound("river round");
         }
         gameSnapshot.setCurrentPlayerIdx(playerAreas.indexOf(currentOpPlayer));
+
+        Optional<PlayerArea> mainPlayerOp = playerAreas.stream()
+                .filter(e -> e.getUser().equals(user))
+                .findFirst();
+        mainPlayerOp.ifPresent(mainPlayer -> gameSnapshot.setMainPlayerIdx(playerAreas.indexOf(mainPlayer)));
+
+        Optional<GameSnapshot.PlayerSnapshot> tarPlayer = gameSnapshot.getPlayers().stream()
+                .filter(e -> e.getUserId().equals(user.getId()))
+                .findFirst();
+        List<GameSnapshot.CardSnapshot> hands = getHands(user);
+        if (tarPlayer.isPresent() && hands != null) {
+            GameSnapshot.PlayerSnapshot playerSnapshot = tarPlayer.get();
+            playerSnapshot.setHand1(hands.get(0));
+            playerSnapshot.setHand2(hands.get(1));
+        }
         return gameSnapshot;
+    }
+
+    private List<GameSnapshot.CardSnapshot> getHands(User user) {
+        Optional<PlayerArea> playerOp = playerAreas.stream()
+                .filter(e -> e.getUser().equals(user))
+                .findFirst();
+        if (playerOp.isPresent()) {
+            PlayerArea player = playerOp.get();
+            List<GameSnapshot.CardSnapshot> hands = new ArrayList<>();
+            hands.add(GameSnapshot.CardSnapshot.fromCardTransparent(player.getHand1()));
+            hands.add(GameSnapshot.CardSnapshot.fromCardTransparent(player.getHand2()));
+            return hands;
+        } else {
+            return null;
+        }
     }
 
     public List<Operate> getCurrentUserAccessibleOperate() {
@@ -251,8 +287,36 @@ public class Game {
         }
     }
 
-    public PlayerArea getCurrentOpPlayer() {
-        return currentOpPlayer;
+    public User getCurrentOpUser() {
+        return currentOpPlayer.getUser();
+    }
+
+    public List<User> getAllNotLeavingPlayers() {
+        List<User> users = new ArrayList<>();
+        for (PlayerArea playerArea : playerAreas) {
+            if (!playerArea.isLeave()) {
+                users.add(playerArea.getUser());
+            }
+        }
+        return users;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public long getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public void leaveGame(User user) {
+        Optional<PlayerArea> playerOp = playerAreas.stream().filter(e -> e.getUser().equals(user)).findFirst();
+        if (playerOp.isPresent()) {
+            PlayerArea player = playerOp.get();
+            if (!player.isAlive()) {
+                player.setLeave(true);
+            }
+        }
     }
 
     private List<PlayerArea> checkWinner(List<PlayerArea> players) {

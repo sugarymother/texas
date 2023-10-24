@@ -9,6 +9,7 @@ import com.moyujian.texas.response.CommonResponse;
 import com.moyujian.texas.response.UserListVo;
 import com.moyujian.texas.response.UserVo;
 import com.moyujian.texas.service.UserService;
+import com.moyujian.texas.utils.CookieUtil;
 import com.moyujian.texas.utils.IpUtil;
 import com.moyujian.texas.utils.Md5Util;
 import jakarta.servlet.http.Cookie;
@@ -43,7 +44,7 @@ public class UserController {
         UserService.login(user);
         user.setOnlineSeries(Md5Util.getMd5Hex(IpUtil.getIp(request) + System.currentTimeMillis()));
 
-        setCookie(user, response);
+        CookieUtil.setCookie(user, response);
         return CommonResponse.suc(UserVo.fromUser(user));
     }
 
@@ -68,7 +69,7 @@ public class UserController {
         }
         user.setOnlineSeries(Md5Util.getMd5Hex(IpUtil.getIp(request) + System.currentTimeMillis()));
 
-        setCookie(user, response);
+        CookieUtil.setCookie(user, response);
         return CommonResponse.suc(UserVo.fromUser(user));
     }
 
@@ -82,7 +83,7 @@ public class UserController {
         }
         user.recharge(Constants.DEFAULT_RECHARGE_CHIPS);
 
-        setCookie(user, response);
+        CookieUtil.setCookie(user, response);
         return CommonResponse.suc(UserVo.fromUser(user));
     }
 
@@ -93,18 +94,5 @@ public class UserController {
         userList.forEach(e -> userVoList.add(UserListVo.fromUser(e)));
         userVoList.sort(Comparator.comparingInt(UserListVo::getEarnedChips));
         return CommonResponse.suc(userVoList);
-    }
-
-    private void setCookie(User user, HttpServletResponse response) {
-        Cookie seriesCookie = new Cookie(Constants.ONLINE_SERIES_COOKIE_NAME, user.getOnlineSeries());
-        seriesCookie.setHttpOnly(true);
-        seriesCookie.setPath("/");
-        seriesCookie.setMaxAge(Integer.MAX_VALUE);
-        Cookie tokenCookie = new Cookie(Constants.COOKIE_NAME, user.signToken());
-        tokenCookie.setHttpOnly(true);
-        tokenCookie.setPath("/");
-        tokenCookie.setMaxAge(Integer.MAX_VALUE);
-        response.addCookie(seriesCookie);
-        response.addCookie(tokenCookie);
     }
 }

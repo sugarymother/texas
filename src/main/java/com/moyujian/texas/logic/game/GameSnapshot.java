@@ -1,5 +1,6 @@
 package com.moyujian.texas.logic.game;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moyujian.texas.logic.UserStatus;
 import lombok.Data;
@@ -18,9 +19,13 @@ public class GameSnapshot {
 
     private int currentPlayerIdx;
 
+    private int mainPlayerIdx;
+
     @Data
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class PlayerSnapshot {
+        @JsonIgnore
+        private String userId;
         private String username;
         private int chips;
         private int bet;
@@ -37,7 +42,7 @@ public class GameSnapshot {
 
         public static PlayerSnapshot fromPlayerArea(PlayerArea playerArea) {
             PlayerSnapshot playerSnapshot = new PlayerSnapshot();
-
+            playerSnapshot.userId = playerArea.getUser().getId();
             playerSnapshot.username = playerArea.getUser().getUsername();
             playerSnapshot.chips = playerArea.getChips();
             playerSnapshot.bet = playerArea.getBet();
@@ -77,6 +82,13 @@ public class GameSnapshot {
                 cardSnapshot.number = CardNumber.UNKNOWN.getNumber();
                 cardSnapshot.suit = CardSuit.UNKNOWN.getSuit();
             }
+            return cardSnapshot;
+        }
+
+        public static CardSnapshot fromCardTransparent(Card card) {
+            CardSnapshot cardSnapshot = new CardSnapshot();
+            cardSnapshot.number = CardNumber.getBySerial(card.getNumber()).getNumber();
+            cardSnapshot.suit = CardSuit.getBySerial(card.getSuit()).getSuit();
             return cardSnapshot;
         }
     }

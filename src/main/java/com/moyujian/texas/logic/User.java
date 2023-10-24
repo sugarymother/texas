@@ -28,6 +28,8 @@ public class User {
 
     private String onlineSeries;
 
+    private String gameId;
+
     private User() {}
 
     public String signToken() {

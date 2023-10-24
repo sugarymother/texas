@@ -1,7 +1,11 @@
 package com.moyujian.texas.controller;
 
 import com.moyujian.texas.constants.Constants;
+import com.moyujian.texas.logic.User;
 import com.moyujian.texas.service.UserService;
+import com.moyujian.texas.utils.CookieUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,23 +31,5 @@ public class PageController {
         model.addAttribute(Constants.WS_URL_ATTR_NAME, wsUrl);
         model.addAttribute(Constants.REST_URL_NAME, restUrl);
         return "index";
-    }
-
-    @GetMapping(path = "/game")
-    public String game(@CookieValue(Constants.ONLINE_SERIES_COOKIE_NAME) String onlineSeries, Model model) {
-        model.addAttribute(Constants.USER_NAME, UserService.getUserBySeries(onlineSeries));
-        model.addAttribute(Constants.WS_URL_ATTR_NAME, wsUrl);
-        model.addAttribute(Constants.REST_URL_NAME, restUrl);
-        model.addAttribute(Constants.ONLINE_SERIES_NAME, onlineSeries);
-        return "game";
-    }
-
-    @GetMapping(path = "/room")
-    public String room(@CookieValue(Constants.ONLINE_SERIES_COOKIE_NAME) String onlineSeries, Model model) {
-        model.addAttribute(Constants.USER_NAME, UserService.getUserBySeries(onlineSeries));
-        model.addAttribute(Constants.WS_URL_ATTR_NAME, wsUrl);
-        model.addAttribute(Constants.REST_URL_NAME, restUrl);
-        model.addAttribute(Constants.ONLINE_SERIES_NAME, onlineSeries);
-        return "room";
     }
 }

@@ -2,11 +2,15 @@ package com.moyujian.texas.websocket;
 
 import com.moyujian.texas.constants.ResponseStatus;
 import com.moyujian.texas.constants.WsOperateType;
+import com.moyujian.texas.exception.UnexpectedTypeException;
 import com.moyujian.texas.logic.UserStatus;
 import com.moyujian.texas.logic.User;
+import com.moyujian.texas.logic.game.GameSnapshot;
+import com.moyujian.texas.logic.game.OperateType;
 import com.moyujian.texas.request.OperateModel;
 import com.moyujian.texas.request.WsRequest;
 import com.moyujian.texas.response.WsResponse;
+import com.moyujian.texas.service.GameService;
 import com.moyujian.texas.service.UserService;
 import com.moyujian.texas.utils.JsonConvertUtil;
 import jakarta.websocket.CloseReason;
@@ -23,6 +27,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -64,7 +69,7 @@ public class WebSocketEndpoint {
     }
 
     @OnMessage
-    public void onMessage(String message, Session session) {
+    public void onMessage(String message, Session session) throws IOException, UnexpectedTypeException {
         log.debug("[ws] msg received, session: {}, msg: {}, user: {}",
                 session.getId(), message, JsonConvertUtil.toJSON(user));
         WsRequest<?> request = JsonConvertUtil.fromJSON(message, WsRequest.class);
@@ -77,10 +82,14 @@ public class WebSocketEndpoint {
             case OPERATE -> {
                 @SuppressWarnings("all")
                 WsRequest<OperateModel> operateRequest = (WsRequest<OperateModel>) request;
-                // TODO
+                GameService.operate(user, operateRequest.getData());
             }
             case GET_GAME_SNAPSHOT -> {
-                // TODO
+                GameSnapshot gameSnapshot = GameService.getGameSnapshot(user);
+                sendMessage(new WsResponse<>(WsOperateType.FLUSH_GAME_SNAPSHOT, gameSnapshot));
+            }
+            case LEAVE_AFTER_DIE -> {
+                GameService.leaveGame(user);
             }
         }
     }
@@ -102,6 +111,14 @@ public class WebSocketEndpoint {
         if (user != null) {
             if (UserStatus.GAMING.equals(user.getStatus())) {
                 user.setStatus(UserStatus.DISCONNECTED);
+
+                if (user.equals(GameService.getCurrentOperateUser(user.getGameId()))) {
+                    OperateModel operateModel = new OperateModel();
+                    operateModel.setType(OperateType.FOLD.getSerial());
+                    try {
+                        GameService.operate(user, operateModel);
+                    } catch (UnexpectedTypeException | IOException ignore) {}
+                }
             } else {
                 user.setStatus(UserStatus.OFFLINE);
             }
