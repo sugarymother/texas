@@ -2,33 +2,34 @@ package com.moyujian.texas.service;
 
 import com.moyujian.texas.logic.User;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class UserService {
 
-    private static final ConcurrentHashMap<String, User> USER_MAP = new ConcurrentHashMap<>();
+    private static final HashMap<String, User> USER_MAP = new HashMap<>();
 
-    public static void login(User user) {
+    public static synchronized void login(User user) {
         USER_MAP.put(user.getId(), user);
     }
 
-    public static void remove(String id) {
+    public static synchronized void remove(String id) {
         USER_MAP.remove(id);
     }
 
-    public static User getUser(String id) {
+    public static synchronized User getUser(String id) {
         return USER_MAP.get(id);
     }
 
-    public static User getUserBySeries(String series) {
+    public static synchronized User getUserBySeries(String series) {
         return USER_MAP.values().stream()
                 .filter(e -> e.getOnlineSeries().equals(series))
                 .findFirst().orElse(null);
     }
 
-    public static List<User> getAllUsers() {
+    public static synchronized List<User> getAllUsers() {
         return USER_MAP.values().stream().toList();
     }
 }

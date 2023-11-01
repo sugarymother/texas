@@ -11,6 +11,9 @@ public enum WsOperateType {
     OPERATE(1),
     GET_GAME_SNAPSHOT(2),
     LEAVE_AFTER_DIE(3),
+    OPEN_GAME(4),
+    ENTER_ROOM(5),
+    LEAVE_ROOM(6),
 
     // send
     FLUSH_GAME_SNAPSHOT(11),
@@ -18,10 +21,9 @@ public enum WsOperateType {
     GAME_START(13),
     GAME_OVER(14),
     TURN_OVER(15),
-    NEXT_TURN(16),
-    IN_TURN_OPERATE(17),
-    FLUSH_USER_LIST(18),
-    ACCESSIBLE_OPERATES(19)
+    IN_TURN_OPERATE(16),
+    FLUSH_USER_LIST(17),
+    FLUSH_ROOM_SNAPSHOT(18)
     ;
 
     private final int serial;

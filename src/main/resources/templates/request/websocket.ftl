@@ -1,13 +1,11 @@
 <div id="wsUrlPrefix" hidden="hidden">${wsUrl}</div>
-<div id="onlineSeries" hidden="hidden">${onlineSeries!''}</div>
 
 <script type="text/javascript">
     const wsUrlPrefix = $('#wsUrlPrefix').text()
-    let onlineSeries = $('#onlineSeries').text()
 
     const FLUSH_USER_LIST = 18
 
-    function openWebsocketConnect(callback) {
+    function openWebsocketConnect(onlineSeries, callback) {
         let wsUrl = wsUrlPrefix + onlineSeries
         const ws = new WebSocket(wsUrl)
 

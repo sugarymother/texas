@@ -33,7 +33,6 @@ public class UserUpdateTask {
 
     @Scheduled(initialDelay = 1, fixedDelay = 1, timeUnit = TimeUnit.MINUTES)
     public void notifyUpdateUserList() throws IOException {
-        log.debug("start sending user-list-updating msg to online users.");
         WebSocketEndpoint.sendMessageByUserStatus(
                 new WsResponse<>(WsOperateType.FLUSH_USER_LIST), UserStatus.ONLINE);
     }

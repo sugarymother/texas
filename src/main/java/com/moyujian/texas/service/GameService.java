@@ -13,6 +13,7 @@ import com.moyujian.texas.request.OperateModel;
 import com.moyujian.texas.response.WsResponse;
 import com.moyujian.texas.utils.JsonConvertUtil;
 import com.moyujian.texas.websocket.WebSocketEndpoint;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -20,27 +21,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class GameService {
 
-    private static final long OPERATE_DELAY = 4000L;
+    private static final int OPERATE_DELAY_IN_SECONDS = 4;
 
     private static final long GAME_MAX_LIFE = 10 * 60 * 1000L;
 
     private static final ConcurrentHashMap<String, Game> GAME_MAP = new ConcurrentHashMap<>();
 
-    public static void openGame(List<User> players, GameSetting gameSetting) throws IOException, InterruptedException {
+    private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(5);
+
+    public static synchronized void openGame(List<User> players, GameSetting gameSetting)
+            throws IOException {
         Game game = Game.run(players, gameSetting);
         GAME_MAP.put(game.getId(), game);
+        log.info("game created, game id: {}, settings: {}", game.getId(), JsonConvertUtil.toJSON(gameSetting));
 
         sendGameStartToAllPlayers(game.getId());
-        Thread.sleep(OPERATE_DELAY);
-        game.restart();
-        sendGameSnapshotToAllPlayers(game.getId());
-        sendOperateToCurrentPlayer(game.getId());
+        EXECUTOR.schedule(() -> {
+            game.restart();
+            try {
+                sendGameSnapshotToAllPlayers(game.getId());
+                sendOperateToCurrentPlayer(game.getId());
+            } catch (IOException e) {
+                log.error("open game send msg to players failed, exception occurred: {}, game id: {}",
+                        e.getMessage(), game.getId());
+                throw new RuntimeException(e);
+            }
+        }, OPERATE_DELAY_IN_SECONDS, TimeUnit.SECONDS);
     }
 
-    public static void operate(User user, OperateModel operateModel) throws UnexpectedTypeException, IOException {
+    public static synchronized void operate(User user, OperateModel operateModel)
+            throws UnexpectedTypeException, IOException, InterruptedException {
         if (!GAME_MAP.containsKey(user.getGameId())) {
             return;
         }
@@ -56,6 +73,8 @@ public class GameService {
         }
 
         game.inTurnOperate(operate);
+        log.info("game operated, game id: {}, user: {}, operate: {}",
+                game.getId(), JsonConvertUtil.toJSON(user), JsonConvertUtil.toJSON(operateModel));
         if (game.isGameOver()) {
             sendGameOverToAllPlayers(game.getId());
 
@@ -69,14 +88,30 @@ public class GameService {
             }
 
             GAME_MAP.remove(game.getId());
+            log.info("game over and removed, game id: {}", game.getId());
         } else if (game.isTurnEnd()) {
             sendTurnOverToAllPlayers(game.getId());
+            game.restart();
+            EXECUTOR.schedule(() -> {
+                try {
+                    sendGameSnapshotToAllPlayers(game.getId());
+                    sendOperateToCurrentPlayer(game.getId());
+                } catch (IOException e) {
+                    log.error("game operate send msg to players failed, " +
+                                    "exception occurred: {}, game id: {}, user: {}, operate: {}",
+                            e.getMessage(),
+                            game.getId(),
+                            JsonConvertUtil.toJSON(user),
+                            JsonConvertUtil.toJSON(operateModel));
+                    throw new RuntimeException(e);
+                }
+            }, OPERATE_DELAY_IN_SECONDS, TimeUnit.SECONDS);
         } else {
             sendOperateToCurrentPlayer(game.getId());
         }
     }
 
-    public static GameSnapshot getGameSnapshot(User user) {
+    public static synchronized GameSnapshot getGameSnapshot(User user) {
         Game game = GAME_MAP.get(user.getGameId());
         if (game == null) {
             return null;
@@ -84,7 +119,7 @@ public class GameService {
         return game.getSnapshot(user);
     }
 
-    public static User getCurrentOperateUser(String gameId) {
+    public static synchronized User getCurrentOperateUser(String gameId) {
         if (!GAME_MAP.containsKey(gameId)) {
             return null;
         } else {
@@ -92,7 +127,7 @@ public class GameService {
         }
     }
 
-    public static void leaveGame(User user) {
+    public static synchronized void leaveGame(User user) {
         Game game = GAME_MAP.get(user.getGameId());
         if (game == null) {
             return;
@@ -100,7 +135,7 @@ public class GameService {
         game.leaveGame(user);
     }
 
-    public static void removeInvalidGames(Logger logger) {
+    public static synchronized void removeInvalidGames(Logger logger) {
         List<Game> toRemoveGames = new ArrayList<>();
         for (Map.Entry<String, Game> entry : GAME_MAP.entrySet()) {
             Game game = entry.getValue();

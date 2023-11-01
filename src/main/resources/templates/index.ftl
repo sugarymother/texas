@@ -52,6 +52,7 @@
         }
     </style>
 </head>
+<#include "request/user.ftl">
 <#include "request/rest.ftl">
 <#include "request/websocket.ftl">
 <body>
@@ -80,6 +81,9 @@
 
 <script type="text/javascript">
     $(function () {
+        // websocket handle
+        let ws
+
         // binding event
         $('#rechargeBtn').on('click', function (e) {
             if (confirm("kneel down and beg moyujian to give you more coins?")) {
@@ -89,13 +93,11 @@
             }
         })
 
-        let user
         function init(userData) {
             setSelfUser(userData)
 
             // open connection
-            onlineSeries = userData.onlineSeries
-            const ws = openWebsocketConnect({
+            ws = openWebsocketConnect(userData.onlineSeries, {
                 onopen: function () {},
                 onclose: function (reason) {
                     alert('connection closed, reason: ' + reason)
@@ -110,11 +112,10 @@
         }
 
         function setSelfUser(userData) {
-            user = userData
-            $('#selfUser .username').text(user.username)
-            $('#selfUser .coin').text(user.chips)
-            $('#selfUser .earned').text(user.earnedChips)
-            $('#selfUser .recharge_times').text(user.rechargeTimes)
+            $('#selfUser .username').text(userData.username)
+            $('#selfUser .coin').text(userData.chips)
+            $('#selfUser .earned').text(userData.earnedChips)
+            $('#selfUser .recharge_times').text(userData.rechargeTimes)
         }
 
         function refreshUserList() {
@@ -141,16 +142,21 @@
             })
         }
 
-        refreshRequest(function (resp) {
-            if (resp.status === SUCCESS) {
-                init(resp.data)
-            } else if (resp.status === NOT_SINGED) {
-                let username = prompt("input your username to create a new account:")
-                signRequest(username, function (signResp) {
-                    init(signResp.data)
-                })
-            }
-        })
+        // init
+        if (user.onlineSeries !== '') {
+            init(user)
+        } else {
+            refreshRequest(function (resp) {
+                if (resp.status === SUCCESS) {
+                    init(resp.data)
+                } else if (resp.status === NOT_SINGED) {
+                    let username = prompt("input your username to create a new account:")
+                    signRequest(username, function (signResp) {
+                        init(signResp.data)
+                    })
+                }
+            })
+        }
     })
 </script>
 

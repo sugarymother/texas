@@ -30,6 +30,8 @@ public class User {
 
     private String gameId;
 
+    private String roomId;
+
     private User() {}
 
     public String signToken() {

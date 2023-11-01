@@ -8,9 +8,11 @@ import com.moyujian.texas.logic.User;
 import com.moyujian.texas.logic.game.GameSnapshot;
 import com.moyujian.texas.logic.game.OperateType;
 import com.moyujian.texas.request.OperateModel;
+import com.moyujian.texas.request.RoomOperateModel;
 import com.moyujian.texas.request.WsRequest;
 import com.moyujian.texas.response.WsResponse;
 import com.moyujian.texas.service.GameService;
+import com.moyujian.texas.service.RoomService;
 import com.moyujian.texas.service.UserService;
 import com.moyujian.texas.utils.JsonConvertUtil;
 import jakarta.websocket.CloseReason;
@@ -27,7 +29,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -69,28 +70,26 @@ public class WebSocketEndpoint {
     }
 
     @OnMessage
-    public void onMessage(String message, Session session) throws IOException, UnexpectedTypeException {
+    public void onMessage(String message, Session session)
+            throws IOException, UnexpectedTypeException, InterruptedException {
         log.debug("[ws] msg received, session: {}, msg: {}, user: {}",
                 session.getId(), message, JsonConvertUtil.toJSON(user));
         WsRequest<?> request = JsonConvertUtil.fromJSON(message, WsRequest.class);
         WsOperateType wsOperateType = WsOperateType.getBySerial(request.getType());
         if (wsOperateType == null) {
-            log.error("ws msg type is unexpected, type: {}", request.getType());
+            log.error("[ws] ws msg type is unexpected, session: {} type: {}", session.getId(), request.getType());
             return;
         }
         switch (wsOperateType) {
-            case OPERATE -> {
-                @SuppressWarnings("all")
-                WsRequest<OperateModel> operateRequest = (WsRequest<OperateModel>) request;
-                GameService.operate(user, operateRequest.getData());
-            }
+            case OPERATE -> GameService.operate(user, (OperateModel) request.getData());
             case GET_GAME_SNAPSHOT -> {
                 GameSnapshot gameSnapshot = GameService.getGameSnapshot(user);
                 sendMessage(new WsResponse<>(WsOperateType.FLUSH_GAME_SNAPSHOT, gameSnapshot));
             }
-            case LEAVE_AFTER_DIE -> {
-                GameService.leaveGame(user);
-            }
+            case LEAVE_AFTER_DIE -> GameService.leaveGame(user);
+            case OPEN_GAME -> RoomService.startGame(((RoomOperateModel) request.getData()).getRoomId(), user);
+            case ENTER_ROOM -> RoomService.enter(user);
+            case LEAVE_ROOM -> RoomService.leave(user);
         }
     }
 
@@ -117,7 +116,7 @@ public class WebSocketEndpoint {
                     operateModel.setType(OperateType.FOLD.getSerial());
                     try {
                         GameService.operate(user, operateModel);
-                    } catch (UnexpectedTypeException | IOException ignore) {}
+                    } catch (UnexpectedTypeException | IOException | InterruptedException ignore) {}
                 }
             } else {
                 user.setStatus(UserStatus.OFFLINE);
@@ -128,6 +127,7 @@ public class WebSocketEndpoint {
     private void sendMessage(Object vo) throws IOException {
         String msg = JsonConvertUtil.toJSON(vo);
         session.getBasicRemote().sendText(msg);
+        // TODO 考虑发送失败的情况
         log.debug("[ws] msg sent, session: {}, user: {}, msg: {}",
                 session.getId(), JsonConvertUtil.toJSON(user), msg);
     }

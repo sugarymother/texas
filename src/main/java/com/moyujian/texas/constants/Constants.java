@@ -14,8 +14,6 @@ public interface Constants {
 
     String REST_URL_NAME = "restUrl";
 
-    String ONLINE_SERIES_NAME = "onlineSeries";
-
     String USER_NAME = "user";
 
     int DEFAULT_INIT_CHIPS = 2000;

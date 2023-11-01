@@ -393,6 +393,11 @@ public class Game {
 
     private void gameOver() {
         gameOver = true;
+        for (PlayerArea playerArea : playerAreas) {
+            if (playerArea.isAlive()) {
+                playerArea.getUser().earn(playerArea.getChips());
+            }
+        }
     }
 
     public boolean isGameOver() {
