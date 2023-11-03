@@ -120,6 +120,11 @@ public class WebSocketEndpoint {
                 }
             } else {
                 user.setStatus(UserStatus.OFFLINE);
+                if (user.getRoomId() != null) {
+                    try {
+                        RoomService.leave(user);
+                    } catch (IOException ignore) {}
+                }
             }
         }
     }

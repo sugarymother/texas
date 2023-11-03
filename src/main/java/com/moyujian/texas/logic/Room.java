@@ -1,6 +1,8 @@
 package com.moyujian.texas.logic;
 
+import com.moyujian.texas.constants.Constants;
 import com.moyujian.texas.logic.game.GameSetting;
+import com.moyujian.texas.logic.game.GameSnapshot;
 import com.moyujian.texas.logic.game.PlayerArea;
 import lombok.Data;
 import lombok.Getter;
@@ -67,13 +69,22 @@ public class Room {
     public RoomSnapshot getSnapshot(User user) {
         RoomSnapshot roomSnapshot = new RoomSnapshot();
         roomSnapshot.setId(id);
-        roomSnapshot.setUsers(userList.stream().map(RoomSnapshot.UserSnapshot::fromUser).toList());
+        roomSnapshot.setUsers(userList.stream().map(e -> {
+            RoomSnapshot.UserSnapshot userSnapshot = RoomSnapshot.UserSnapshot.fromUser(e);
+            if (e.equals(roomOwner)) {
+                userSnapshot.setIsOwner(true);
+            }
+            return userSnapshot;
+        }).toList());
         roomSnapshot.setAccessChipsNum(gameSetting.getAccessChipsNum());
         roomSnapshot.setMaxBet(gameSetting.getMaxBet());
-        roomSnapshot.setMinLargeBet(gameSetting.getMinLargeBet());
-        roomSnapshot.setOwnerIdx(userList.indexOf(roomOwner));
+        int minLargeBet = gameSetting.getMinLargeBet();
+        if (minLargeBet == Constants.UNLIMITED_LARGE_BET) {
+            roomSnapshot.setMinLargeBet("unlimited");
+        } else {
+            roomSnapshot.setMinLargeBet(String.valueOf(minLargeBet));
+        }
         roomSnapshot.setMainUserIdx(userList.indexOf(user));
-        roomSnapshot.setOwner(user.equals(roomOwner));
         return roomSnapshot;
     }
 }

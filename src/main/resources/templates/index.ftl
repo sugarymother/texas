@@ -9,6 +9,7 @@
             padding: 10px;
             height: 100%;
             font-size: 18px;
+            background-color: white;
         }
         body div {
             margin: 5px;
@@ -56,6 +57,7 @@
 <#include "request/rest.ftl">
 <#include "request/websocket.ftl">
 <body>
+    <#include "page/room.ftl">
     <div class="border_box">
         <div class="left_area">
             <div id="selfUser" class="user_box">
@@ -81,9 +83,6 @@
 
 <script type="text/javascript">
     $(function () {
-        // websocket handle
-        let ws
-
         // binding event
         $('#rechargeBtn').on('click', function (e) {
             if (confirm("kneel down and beg moyujian to give you more coins?")) {
@@ -92,20 +91,30 @@
                 })
             }
         })
+        $('#startBtn').on('click', function () {
+            wsSendMsg(ENTER_ROOM, null)
+            // TODO pop up msg
+        })
 
         function init(userData) {
             setSelfUser(userData)
 
             // open connection
-            ws = openWebsocketConnect(userData.onlineSeries, {
+            openWebsocketConnect(userData.onlineSeries, {
                 onopen: function () {},
                 onclose: function (reason) {
                     alert('connection closed, reason: ' + reason)
                     location.reload()
                 },
                 onmessage: function (data) {
+                    console.log('receive data: ' + data)
                     if (data.type === FLUSH_USER_LIST) {
                         refreshUserList()
+                    } else if (data.type === FLUSH_ROOM_SNAPSHOT) {
+                        if (!roomPageOn) {
+                            enterRoom()
+                        }
+                        flushRoomPage(data.data)
                     }
                 }
             })
