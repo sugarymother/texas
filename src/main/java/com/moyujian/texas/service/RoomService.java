@@ -25,6 +25,10 @@ public class RoomService {
     private static final Queue<Room> ROOM_QUEUE = new LinkedList<>();
 
     public static synchronized void enter(User user) throws IOException {
+        if (user.getRoomId() != null) {
+            return;
+        }
+
         Room room = null;
         if (ROOM_QUEUE.isEmpty()) {
             room = createNewRoom(user);

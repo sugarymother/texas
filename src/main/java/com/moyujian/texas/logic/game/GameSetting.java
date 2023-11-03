@@ -10,5 +10,7 @@ public class GameSetting {
 
     private int minLargeBet = 10;
 
-    private int maxBet = Constants.UNLIMITED_LARGE_BET;
+    private int maxBet = UNLIMITED_MAX_BET;
+
+    public static final int UNLIMITED_MAX_BET = Integer.MAX_VALUE;
 }

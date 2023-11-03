@@ -1,5 +1,6 @@
 package com.moyujian.texas.logic;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
@@ -16,19 +17,24 @@ public class RoomSnapshot {
 
     private int minLargeBet;
 
-    private int maxBet;
-
-    private int ownerIdx;
+    private String maxBet;
 
     private int mainUserIdx;
-
-    private boolean isOwner;
 
     @Data
     public static class UserSnapshot {
         private String username;
         private int chips;
         private int rechargeTimes;
+        private boolean isOwner = false;
+
+        public boolean getIsOwner() {
+            return isOwner;
+        }
+
+        public void setIsOwner(boolean owner) {
+            isOwner = owner;
+        }
 
         public static UserSnapshot fromUser(User user) {
             UserSnapshot userSnapshot = new UserSnapshot();
