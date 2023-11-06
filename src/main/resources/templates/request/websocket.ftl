@@ -19,6 +19,7 @@
     const IN_TURN_OPERATE = 16
     const FLUSH_USER_LIST = 17
     const FLUSH_ROOM_SNAPSHOT = 18
+    const START_GAME_FAILED = 19
 
     let ws = null
 

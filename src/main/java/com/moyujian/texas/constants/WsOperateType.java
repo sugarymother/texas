@@ -23,7 +23,8 @@ public enum WsOperateType {
     TURN_OVER(15),
     IN_TURN_OPERATE(16),
     FLUSH_USER_LIST(17),
-    FLUSH_ROOM_SNAPSHOT(18)
+    FLUSH_ROOM_SNAPSHOT(18),
+    START_GAME_FAILED(19)
     ;
 
     private final int serial;

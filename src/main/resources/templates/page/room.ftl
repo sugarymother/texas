@@ -67,10 +67,10 @@
         roomPage.css("z-index", "-1")
         roomPage.css('visibility', 'hidden')
         roomPageOn = false
-        wsSendMsg(LEAVE_ROOM, {roomId: $(".user_slot_area .room_id").text()})
+        wsSendMsg(LEAVE_ROOM)
     })
     $("#openGameBtn").on('click', function () {
-
+        wsSendMsg(OPEN_GAME, {roomId: $(".user_slot_area .room_id").text()})
     })
 
     function enterRoom() {

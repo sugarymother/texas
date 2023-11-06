@@ -2,12 +2,12 @@ package com.moyujian.texas.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class WsRequest<T> {
+public class WsRequest {
 
     private int type;
-
-    private T Data;
 }

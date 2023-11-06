@@ -7,8 +7,10 @@ import com.moyujian.texas.logic.UserStatus;
 import com.moyujian.texas.logic.User;
 import com.moyujian.texas.logic.game.GameSnapshot;
 import com.moyujian.texas.logic.game.OperateType;
+import com.moyujian.texas.request.GameOperateRequest;
 import com.moyujian.texas.request.OperateModel;
 import com.moyujian.texas.request.RoomOperateModel;
+import com.moyujian.texas.request.RoomOperateRequest;
 import com.moyujian.texas.request.WsRequest;
 import com.moyujian.texas.response.WsResponse;
 import com.moyujian.texas.service.GameService;
@@ -74,20 +76,26 @@ public class WebSocketEndpoint {
             throws IOException, UnexpectedTypeException, InterruptedException {
         log.debug("[ws] msg received, session: {}, msg: {}, user: {}",
                 session.getId(), message, JsonConvertUtil.toJSON(user));
-        WsRequest<?> request = JsonConvertUtil.fromJSON(message, WsRequest.class);
+        WsRequest request = JsonConvertUtil.fromJSON(message, WsRequest.class);
         WsOperateType wsOperateType = WsOperateType.getBySerial(request.getType());
         if (wsOperateType == null) {
             log.error("[ws] ws msg type is unexpected, session: {} type: {}", session.getId(), request.getType());
             return;
         }
         switch (wsOperateType) {
-            case OPERATE -> GameService.operate(user, (OperateModel) request.getData());
+            case OPERATE -> {
+                GameOperateRequest gameOperateRequest = JsonConvertUtil.fromJSON(message, GameOperateRequest.class);
+                GameService.operate(user, gameOperateRequest.getData());
+            }
             case GET_GAME_SNAPSHOT -> {
                 GameSnapshot gameSnapshot = GameService.getGameSnapshot(user);
                 sendMessage(new WsResponse<>(WsOperateType.FLUSH_GAME_SNAPSHOT, gameSnapshot));
             }
             case LEAVE_AFTER_DIE -> GameService.leaveGame(user);
-            case OPEN_GAME -> RoomService.startGame(((RoomOperateModel) request.getData()).getRoomId(), user);
+            case OPEN_GAME -> {
+                RoomOperateRequest roomOperateRequest = JsonConvertUtil.fromJSON(message, RoomOperateRequest.class);
+                RoomService.startGame(roomOperateRequest.getData().getRoomId(), user);
+            }
             case ENTER_ROOM -> RoomService.enter(user);
             case LEAVE_ROOM -> RoomService.leave(user);
         }

@@ -57,6 +57,7 @@
 <#include "request/rest.ftl">
 <#include "request/websocket.ftl">
 <body>
+    <#include "page/popup.ftl">
     <#include "page/room.ftl">
     <div class="border_box">
         <div class="left_area">
@@ -93,7 +94,7 @@
         })
         $('#startBtn').on('click', function () {
             wsSendMsg(ENTER_ROOM, null)
-            // TODO pop up msg
+            popUp("finding room...")
         })
 
         function init(userData) {
@@ -107,14 +108,22 @@
                     location.reload()
                 },
                 onmessage: function (data) {
-                    console.log('receive data: ' + data)
+                    console.log(data)
                     if (data.type === FLUSH_USER_LIST) {
                         refreshUserList()
                     } else if (data.type === FLUSH_ROOM_SNAPSHOT) {
                         if (!roomPageOn) {
                             enterRoom()
+                            if (popBoxUp) {
+                                popDown()
+                            }
                         }
                         flushRoomPage(data.data)
+                    } else if (data.type === START_GAME_FAILED) {
+                        popUp(data.data, 2)
+                    } else if (data.type === GAME_START) {
+                        refreshSelfUserInfo()
+                        // TODO start game
                     }
                 }
             })
@@ -147,6 +156,14 @@
                     if (userData.status === 'disconnected' || userData.status === 'offline') {
                         newItem.find('.online_status').css('color', 'grey')
                     }
+                }
+            })
+        }
+
+        function refreshSelfUserInfo() {
+            refreshRequest(function (resp) {
+                if (resp.status === SUCCESS) {
+                    setSelfUser(resp.data)
                 }
             })
         }

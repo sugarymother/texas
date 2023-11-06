@@ -60,11 +60,26 @@ public class RoomService {
         }
     }
 
-    public static synchronized void startGame(String roomId, User user) throws IOException, InterruptedException {
+    public static synchronized void startGame(String roomId, User user) throws IOException {
         Room room = ROOM_MAP.get(roomId);
         if (room == null || !room.getRoomOwner().equals(user)) {
             return;
         }
+
+        if (room.getUserList().size() < 2) {
+            sendRoomOpenFailedToAllPlayers(roomId, "no enough players to start. 2 players at least are needed.");
+            return;
+        }
+
+        // 检查user chips是否足够
+        for (User player : room.getUserList()) {
+            if (player.getChips() < room.getGameSetting().getAccessChipsNum()) {
+                sendRoomOpenFailedToAllPlayers(roomId,
+                        "failed to start game, user: " + player.getUsername() + " doesn't have enough chips.");
+                return;
+            }
+        }
+
         removeRoom(roomId);
         GameService.openGame(room.getUserList(), room.getGameSetting());
     }
@@ -119,6 +134,21 @@ public class RoomService {
         for (User user : room.getUserList()) {
             WebSocketEndpoint.sendMessageByUsers(
                     new WsResponse<>(WsOperateType.FLUSH_ROOM_SNAPSHOT, room.getSnapshot(user)), List.of(user));
+        }
+    }
+
+    private static void sendRoomOpenFailedToAllPlayers(String roomId, String msg) throws IOException {
+        if (!ROOM_MAP.containsKey(roomId)) {
+            return;
+        }
+        Room room = ROOM_MAP.get(roomId);
+        if (room.isEmpty()) {
+            return;
+        }
+
+        for (User user : room.getUserList()) {
+            WebSocketEndpoint.sendMessageByUsers(
+                    new WsResponse<>(WsOperateType.START_GAME_FAILED, msg), List.of(user));
         }
     }
 }
