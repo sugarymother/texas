@@ -63,15 +63,20 @@
 
     // binding event
     $("#exitBtn").on('click', function () {
-        let roomPage = $("#roomPage")
-        roomPage.css("z-index", "-1")
-        roomPage.css('visibility', 'hidden')
-        roomPageOn = false
+        closeRoom()
         wsSendMsg(LEAVE_ROOM)
     })
     $("#openGameBtn").on('click', function () {
         wsSendMsg(OPEN_GAME, {roomId: $(".user_slot_area .room_id").text()})
+        popUp('game starting...')
     })
+
+    function closeRoom() {
+        let roomPage = $("#roomPage")
+        roomPage.css("z-index", "-1")
+        roomPage.css('visibility', 'hidden')
+        roomPageOn = false
+    }
 
     function enterRoom() {
         let roomPage = $("#roomPage")

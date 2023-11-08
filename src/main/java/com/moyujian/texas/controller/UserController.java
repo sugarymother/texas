@@ -44,13 +44,14 @@ public class UserController {
         UserService.login(user);
         user.setOnlineSeries(Md5Util.getMd5Hex(IpUtil.getIp(request) + System.currentTimeMillis()));
 
-        CookieUtil.setCookie(user, response);
+        CookieUtil.setCookie(user, request, response, null);
         return CommonResponse.suc(UserVo.fromUser(user));
     }
 
     @RequestMapping(method = RequestMethod.POST, path = "/refresh")
     public CommonResponse<UserVo> refresh(@CookieValue(value = Constants.COOKIE_NAME, required = false) String token,
-                                          HttpServletRequest request, HttpServletResponse response) {
+                      @CookieValue(name = Constants.ONLINE_SERIES_COOKIE_NAME, required = false) String onlineSeries,
+                      HttpServletRequest request, HttpServletResponse response) {
         if (Strings.isEmpty(token)) {
             // 无token，说明还未拥有用户信息，返回信息使前端走创建用户流程
             return CommonResponse.get(ResponseStatus.NOT_SINGED);
@@ -67,15 +68,15 @@ public class UserController {
             }
             UserService.login(user);
         }
-        user.setOnlineSeries(Md5Util.getMd5Hex(IpUtil.getIp(request) + System.currentTimeMillis()));
 
-        CookieUtil.setCookie(user, response);
+        CookieUtil.setCookie(user, request, response, onlineSeries);
         return CommonResponse.suc(UserVo.fromUser(user));
     }
 
     @RequestMapping(method = RequestMethod.POST, path = "/recharge")
     public CommonResponse<UserVo> recharge(@CookieValue(Constants.COOKIE_NAME) String token,
-                                           HttpServletResponse response) {
+                       @CookieValue(name = Constants.ONLINE_SERIES_COOKIE_NAME, required = false) String onlineSeries,
+                       HttpServletRequest request, HttpServletResponse response) {
         String id = User.getIdFromToken(token);
         User user = UserService.getUser(id);
         if (user == null) {
@@ -83,7 +84,7 @@ public class UserController {
         }
         user.recharge(Constants.DEFAULT_RECHARGE_CHIPS);
 
-        CookieUtil.setCookie(user, response);
+        CookieUtil.setCookie(user, request, response, onlineSeries);
         return CommonResponse.suc(UserVo.fromUser(user));
     }
 

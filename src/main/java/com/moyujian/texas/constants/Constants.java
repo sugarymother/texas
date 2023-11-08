@@ -19,4 +19,6 @@ public interface Constants {
     int DEFAULT_INIT_CHIPS = 2000;
 
     int DEFAULT_RECHARGE_CHIPS = 1000;
+
+    int ONLINE_SERIES_MAX_AGE_IN_SEC = 24 * 60 * 60;
 }

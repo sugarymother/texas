@@ -106,7 +106,7 @@ public class Game {
         roundBet = 0;
         for (PlayerArea playerArea : playerAreas) {
             if (playerArea.isAlive()) {
-                playerArea.setBet(minLargeBet);
+                playerArea.placeBet(minLargeBet);
             }
         }
         totalBet = minLargeBet;
@@ -137,15 +137,19 @@ public class Game {
                 notFoldPlayer.getHand1().setTopUp(true);
                 notFoldPlayer.getHand2().setTopUp(true);
             }
-        }
 
-        List<PlayerArea> winners = checkWinner(notFoldPlayers);
+            List<PlayerArea> winners = checkWinner(notFoldPlayers);
 
-        int avgChips = totalChips / winners.size();
-        int leftChips = totalChips - avgChips;
-        winners.sort(Comparator.comparing(PlayerArea::getBet).reversed());
-        for (PlayerArea winner : winners) {
-            winner.addChips(avgChips + leftChips-- > 0 ? 1 : 0);
+            int avgChips = totalChips / winners.size();
+            int leftChips = totalChips - avgChips;
+            winners.sort(Comparator.comparing(PlayerArea::getBet).reversed());
+            for (PlayerArea winner : winners) {
+                winner.addChips(avgChips + (leftChips-- > 0 ? 1 : 0));
+            }
+        } else {
+            PlayerArea winner = notFoldPlayers.get(0);
+            winner.setWin(true);
+            winner.addChips(totalChips);
         }
 
         // 不足最小bet则直接强制退出
@@ -320,10 +324,6 @@ public class Game {
     }
 
     private List<PlayerArea> checkWinner(List<PlayerArea> players) {
-        if (players.size() < 2) {
-            return players;
-        }
-
         List<PlayerArea> winners = new ArrayList<>();
         int maxWeight;
 

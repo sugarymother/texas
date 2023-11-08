@@ -16,7 +16,7 @@
             padding: 5px;
             border: 1px solid black;
         }
-        #startBtn, #rechargeBtn {
+        button {
             display: inline-block;
             padding: 5px;
             font-size: 14px;
@@ -59,6 +59,7 @@
 <body>
     <#include "page/popup.ftl">
     <#include "page/room.ftl">
+    <#include "page/game.ftl">
     <div class="border_box">
         <div class="left_area">
             <div id="selfUser" class="user_box">
@@ -72,8 +73,8 @@
                 <b>recharge times: </b><div class="recharge_times">times</div>
             </div>
             <br>
-            <div id="startBtn">START GAME</div>
-            <div id="rechargeBtn">RECHARGE COIN</div>
+            <button id="startBtn">START GAME</button>
+            <button id="rechargeBtn">RECHARGE COIN</button>
         </div>
         <div class="user_list_area">
             <b class="title">user list</b>
@@ -97,6 +98,54 @@
             popUp("finding room...")
         })
 
+        // websocket msg handler
+        function handleMsg(msg) {
+            switch (msg.type) {
+                case FLUSH_USER_LIST:
+                    if (!gamePageOn) {
+                        refreshUserList()
+                    }
+                    break
+
+                case FLUSH_ROOM_SNAPSHOT:
+                    if (!roomPageOn) {
+                        enterRoom()
+                        if (popBoxUp) {
+                            popDown()
+                        }
+                    }
+                    flushRoomPage(msg.data)
+                    break
+
+                case START_GAME_FAILED:
+                    if (roomPageOn) {
+                        popUp(msg.data, 2)
+                    }
+                    break
+
+                case GAME_START:
+                    refreshSelfUserInfo()
+                    popDown()
+                    enterGame()
+                    break
+                case FLUSH_GAME_SNAPSHOT:
+                    flushGame(msg.data, false)
+                    break
+                case RECONNECT_INTO_GAME:
+                    if (roomPageOn === false && gamePageOn === false) {
+                        enterGame()
+                        wsSendMsg(GET_GAME_SNAPSHOT)
+                    }
+                    break
+                case TURN_OVER:
+                    flushGame(msg.data, true)
+                    popUp('TURN OVER', 2)
+                case IN_TURN_OPERATE:
+
+                    break
+            }
+        }
+
         function init(userData) {
             setSelfUser(userData)
 
@@ -109,22 +158,7 @@
                 },
                 onmessage: function (data) {
                     console.log(data)
-                    if (data.type === FLUSH_USER_LIST) {
-                        refreshUserList()
-                    } else if (data.type === FLUSH_ROOM_SNAPSHOT) {
-                        if (!roomPageOn) {
-                            enterRoom()
-                            if (popBoxUp) {
-                                popDown()
-                            }
-                        }
-                        flushRoomPage(data.data)
-                    } else if (data.type === START_GAME_FAILED) {
-                        popUp(data.data, 2)
-                    } else if (data.type === GAME_START) {
-                        refreshSelfUserInfo()
-                        // TODO start game
-                    }
+                    handleMsg(data)
                 }
             })
         }

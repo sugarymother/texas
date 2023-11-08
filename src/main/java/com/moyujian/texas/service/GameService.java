@@ -28,7 +28,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class GameService {
 
-    private static final int OPERATE_DELAY_IN_SECONDS = 4;
+    private static final int OPERATE_DELAY_IN_SECONDS = 5;
+
+    private static final int GAME_START_DELAY_IN_SECONDS = 3;
 
     private static final long GAME_MAX_LIFE = 10 * 60 * 1000L;
 
@@ -53,7 +55,7 @@ public class GameService {
                         e.getMessage(), game.getId());
                 throw new RuntimeException(e);
             }
-        }, OPERATE_DELAY_IN_SECONDS, TimeUnit.SECONDS);
+        }, GAME_START_DELAY_IN_SECONDS, TimeUnit.SECONDS);
     }
 
     public static synchronized void operate(User user, OperateModel operateModel)
