@@ -10,6 +10,7 @@
             height: 100%;
             font-size: 18px;
             background-color: white;
+            zoom: 0.8;
         }
         body div {
             margin: 5px;
@@ -125,6 +126,9 @@
 
                 case GAME_START:
                     refreshSelfUserInfo()
+                    if (roomPageOn) {
+                        closeRoom()
+                    }
                     popDown()
                     enterGame()
                     break
@@ -140,8 +144,16 @@
                 case TURN_OVER:
                     flushGame(msg.data, true)
                     popUp('TURN OVER', 2)
+                    break
                 case IN_TURN_OPERATE:
-
+                    flushGameOperate(msg.data)
+                    break
+                case GAME_OVER:
+                    flushGame(msg.data, true, true)
+                    refreshSelfUserInfo()
+                    setTimeout(function () {
+                        leaveGame()
+                    }, 7 * 1000)
                     break
             }
         }

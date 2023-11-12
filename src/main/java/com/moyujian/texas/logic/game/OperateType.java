@@ -7,11 +7,11 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum OperateType {
 
-    CHECK(1, "check"),
-    CALL(2, "call"),
-    RAISE(3, "raise"),
-    FOLD(4, "fold"),
-    ALLIN(5, "allin")
+    CHECK(1, "CHECK"),
+    CALL(2, "CALL"),
+    RAISE(3, "RAISE"),
+    FOLD(4, "FOLD"),
+    ALLIN(5, "ALLIN")
     ;
 
     private final int serial;

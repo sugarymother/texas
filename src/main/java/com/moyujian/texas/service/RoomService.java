@@ -75,13 +75,17 @@ public class RoomService {
         for (User player : room.getUserList()) {
             if (player.getChips() < room.getGameSetting().getAccessChipsNum()) {
                 sendRoomOpenFailedToAllPlayers(roomId,
-                        "failed to start game, user: " + player.getUsername() + " doesn't have enough chips.");
+                        "failed to start game, user: " + player.getUsername() + " doesn't have enough coins.");
                 return;
             }
         }
 
         removeRoom(roomId);
         GameService.openGame(room.getUserList(), room.getGameSetting());
+        List<User> toLeaveUsers = new ArrayList<>(room.getUserList());
+        for (User toLeaveUser : toLeaveUsers) {
+            room.leave(toLeaveUser);
+        }
     }
 
     public static synchronized void removeInvalidRooms(Logger logger) {

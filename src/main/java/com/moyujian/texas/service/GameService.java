@@ -109,6 +109,7 @@ public class GameService {
                 }
             }, OPERATE_DELAY_IN_SECONDS, TimeUnit.SECONDS);
         } else {
+            sendGameSnapshotToAllPlayers(game.getId());
             sendOperateToCurrentPlayer(game.getId());
         }
     }

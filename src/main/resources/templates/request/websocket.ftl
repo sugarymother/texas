@@ -21,6 +21,12 @@
     const FLUSH_ROOM_SNAPSHOT = 18
     const START_GAME_FAILED = 19
 
+    const CHECK = 1
+    const CALL = 2
+    const RAISE = 3
+    const FOLD = 4
+    const ALLIN = 5
+
     let ws = null
 
     function openWebsocketConnect(onlineSeries, callback) {

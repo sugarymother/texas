@@ -28,8 +28,8 @@ public class Game {
 
     private final List<PlayerArea> playerAreas = new ArrayList<>();
 
-    private int nextPlayerIdx = 0;
-    private int nextDealerIdx = 0;
+    private int playerIdx = -1;
+    private int dealerIdx = -1;
 
     private PlayerArea currentOpPlayer = null;
     private PlayerArea dealerPlayer = null;
@@ -93,12 +93,12 @@ public class Game {
         // 公共区清空
         communityArea.clear();
         // 重置指针
-        dealerPlayer = playerAreas.get(nextDealerIdx);
-        currentOpPlayer = dealerPlayer;
         do {
-            nextDealerIdx = (nextDealerIdx + 1) % playerAreas.size();
-        } while (!playerAreas.get(nextDealerIdx).isAlive());
-        nextPlayerIdx = nextDealerIdx;
+            dealerIdx = (dealerIdx + 1) % playerAreas.size();
+        } while (!playerAreas.get(dealerIdx).isAlive());
+        dealerPlayer = playerAreas.get(dealerIdx);
+        currentOpPlayer = dealerPlayer;
+        playerIdx = dealerIdx;
         endingPlayer = dealerPlayer;
 
         // 跳过preflop
@@ -107,7 +107,13 @@ public class Game {
         for (PlayerArea playerArea : playerAreas) {
             if (playerArea.isAlive()) {
                 playerArea.placeBet(minLargeBet);
+                if (playerArea.getChips() == 0) {
+                    playerArea.setAllin(true);
+                }
             }
+        }
+        if (currentOpPlayer.isAllin()) {
+            playerNext();
         }
         totalBet = minLargeBet;
         for (int i = 0, n = 3; i < n; i++) {
@@ -250,19 +256,20 @@ public class Game {
         int diffBet = totalBet - currBet;
 
         // 检查是否满足check, call
-        if (chips >= diffBet) {
+        if (chips > diffBet) {
             if (roundBet == 0) {
                 // 满足 check
-                accessibleOperateList.add(new Operate(OperateType.CHECK, new int[]{diffBet}));
+                accessibleOperateList.add(new Operate(OperateType.CHECK, new int[0]));
             } else {
                 // 满足 call
                 accessibleOperateList.add(new Operate(OperateType.CALL, new int[]{diffBet}));
             }
 
             // 检查是否满足raise
-            if (chips >= diffBet + roundBet) {
+            if (chips > diffBet + Math.max(roundBet, minLargeBet)) {
                 List<Integer> accessibleChipsList = new ArrayList<>();
-                for (int raiseBet = roundBet; raiseBet + diffBet <= chips && raiseBet <= maxBet; raiseBet += 10) {
+                for (int raiseBet = Math.max(roundBet, minLargeBet);
+                     raiseBet + diffBet < chips && raiseBet <= maxBet; raiseBet += minLargeBet) {
                     accessibleChipsList.add(raiseBet + diffBet);
                 }
                 int[] accessibleChips = accessibleChipsList.stream().mapToInt(Integer::intValue).toArray();
@@ -281,7 +288,8 @@ public class Game {
                 .filter(e -> e.getOperateType().equals(operate.getOperateType()))
                 .findFirst();
         if (operateOp.isPresent()) {
-            if (operateOp.get().getOperateType().equals(OperateType.FOLD)) {
+            if (operateOp.get().getOperateType().equals(OperateType.CHECK) ||
+                    operateOp.get().getOperateType().equals(OperateType.FOLD)) {
                 return true;
             }
             int[] accessibleChips = operateOp.get().getAccessibleChips();
@@ -345,24 +353,33 @@ public class Game {
     }
 
     private boolean playerNext() {
-        PlayerArea nextPlayer = playerAreas.get(nextPlayerIdx);
+        playerIdx = (playerIdx + 1) % playerAreas.size();
+        PlayerArea nextPlayer = playerAreas.get(playerIdx);
         if (nextPlayer.equals(endingPlayer)) {
             return false;
-        }
-        currentOpPlayer = nextPlayer;
-        nextPlayerIdx = (nextPlayerIdx + 1) % playerAreas.size();
-
-        if (currentOpPlayer.isAlive() && !currentOpPlayer.isAllin() && !currentOpPlayer.isFold()) {
-            return true;
-        } else {
+        } else if (!nextPlayer.isAlive() || nextPlayer.isAllin() || nextPlayer.isFold()) {
             return playerNext();
         }
+        currentOpPlayer = nextPlayer;
+        return true;
     }
 
     private boolean roundNext() {
-        roundBet = 0;
-        endingPlayer = dealerPlayer;
-        return ++round <= RIVER_ROUND;
+        boolean hasNextRound = ++round <= RIVER_ROUND;
+        if (hasNextRound) {
+            Card card = deck.draw();
+            card.setTopUp(true);
+            communityArea.add(card);
+            roundBet = 0;
+            endingPlayer = dealerPlayer;
+            playerIdx = dealerIdx;
+            currentOpPlayer = dealerPlayer;
+            if ((!currentOpPlayer.isAlive() || currentOpPlayer.isFold() || currentOpPlayer.isAllin())
+                    && !playerNext()) {
+                return roundNext();
+            }
+        }
+        return hasNextRound;
     }
 
     private void checkAndCallOperate() {
@@ -421,10 +438,19 @@ public class Game {
     private int accessiblePlayerNum() {
         int accessiblePlayerNum = 0;
         for (PlayerArea playerArea : playerAreas) {
-            if (playerArea.isAlive() && !playerArea.isFold() && !playerArea.isAllin()) {
+            if (playerArea.isAlive() && !playerArea.isFold()) {
                 accessiblePlayerNum++;
             }
         }
         return accessiblePlayerNum;
+    }
+
+    private boolean isAllAllin() {
+        for (PlayerArea playerArea : playerAreas) {
+            if (!playerArea.isAllin()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

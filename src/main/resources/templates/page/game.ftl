@@ -101,6 +101,38 @@
         text-align: center;
         height: 20px;
     }
+    .operate_item {
+        font-size: 12px;
+        padding: 0 10px;
+        border: 1px solid black;
+        height: 80%;
+        margin: 0 5px;
+        cursor: pointer;
+        background-color: white;
+    }
+    .operate_item div {
+        font-weight: bold;
+        border: none;
+        text-align: center;
+    }
+    .operate_item ul {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .operate_item:hover {
+        background-color: aliceblue;
+    }
+    .operate_item ul li {
+        border: 1px solid black;
+        border-radius: 10px;
+        padding: 3px;
+        margin: 3px;
+        cursor: pointer;
+    }
+    .operate_item ul li:hover {
+        background-color: #afe9ff;
+    }
 </style>
 
 <div id="gamePage">
@@ -136,7 +168,6 @@
 
     let gameSnapshot = null
     let gameStart = false
-    let gameOver = false
     let turnOver = false
     let playerAreaList = []
 
@@ -149,6 +180,7 @@
     }
 
     function leaveGame() {
+        clearGameArea()
         let gamePage = $('#gamePage')
         gamePage.css('z-index', -1)
         gamePage.css('visibility', 'hidden')
@@ -156,12 +188,15 @@
     }
 
     // flush game snapshot
-    function flushGame(snapshot, isTurnOver) {
+    function flushGame(snapshot, isTurnOver, isGameOver) {
         if (!gameStart) {
             gameStart = true
             popUp('GAME START!', 2)
         }
-        if (isTurnOver) {
+        if (isGameOver) {
+            popUp('GAME OVER', 2)
+            turnOver = true
+        } else if (isTurnOver) {
             turnOver = true
         } else if (turnOver) {
             turnOver = false
@@ -250,8 +285,25 @@
     }
 
     // flush game operate
-    function flushGameOperate(operate) {
+    function flushGameOperate(operates) {
+        operateList.children().remove()
+        for (let operate of operates) {
+            operateList.append(createOperateItem(operate))
+        }
+    }
 
+    function clearGameArea() {
+        let bottom = $('#selfUserArea')
+        let right  = $('#rightUserArea')
+        let top    = $('#topUserArea')
+        let left   = $('#leftUserArea')
+        bottom.children().remove()
+        right.children().remove()
+        top.children().remove()
+        left.children().remove()
+        operateList.children().remove()
+        gameInfoBox.text('starting...')
+        publicCardList.children().remove()
     }
 
     // create card item
@@ -282,10 +334,10 @@
         let operateStatus = ''
         if (playerArea.leave) {
             username = username + '(left)'
-        } else if (!playerArea.alive) {
-            username = username + '(out)'
         } else {
-            if (playerArea.disconnected) {
+            if (!playerArea.alive) {
+                username = username + '(out)'
+            } else if (playerArea.disconnected) {
                 username = username + '(disconnected)'
             }
             chips = playerArea.chips
@@ -295,7 +347,9 @@
                 if (finalCardType === undefined || finalCardType === null) {
                     finalCardType = {type: ''}
                 }
-                if (playerArea.fold) {
+                if (!playerArea.alive && playerArea.finalCardType === undefined) {
+                    operateStatus = ' '
+                } else if (playerArea.fold) {
                     operateStatus = 'FOLD'
                 } else if (playerArea.win) {
                     operateStatus = finalCardType.type + '(WIN!)'
@@ -329,13 +383,54 @@
                 '</ul>' +
             '</li>')
 
-        if (playerArea.alive) {
+        if (playerArea.hand1 !== undefined && playerArea.hand1 !== null &&
+            playerArea.hand2 !== undefined && playerArea.hand2 !== null) {
             let hands = playerAreaItem.children('ul')
             hands.append(createCard(playerArea.hand1))
             hands.append(createCard(playerArea.hand2))
         }
 
         return playerAreaItem
+    }
+
+    function createOperateItem(operate) {
+        let operateItem = $(
+            '<li class="operate_item">' +
+                '<div>' + operate.operateType + '</div>' +
+            '</li>')
+        if (operate.accessibleChips !== undefined && operate.accessibleChips !== null) {
+            let chipsList = $('<ul></ul>')
+            operateItem.append(chipsList)
+            for (let chips of operate.accessibleChips) {
+                let chipsItem = $('<li>' + chips + '</li>')
+                chipsItem.on('click', function () {
+                    wsSendMsg(OPERATE, {type: transOperateType(operate.operateType), chipNum: chips})
+                    operateList.children().remove()
+                })
+                chipsList.append(chipsItem)
+            }
+        } else {
+            operateItem.on('click', function () {
+                wsSendMsg(OPERATE, {type: transOperateType(operate.operateType)})
+                operateList.children().remove()
+            })
+        }
+        return operateItem
+    }
+
+    function transOperateType(type) {
+        switch (type) {
+            case 'CHECK':
+                return CHECK
+            case 'CALL':
+                return CALL
+            case 'RAISE':
+                return RAISE
+            case 'ALLIN':
+                return ALLIN
+            case 'FOLD':
+                return FOLD
+        }
     }
 
     $(function () {
@@ -378,7 +473,17 @@
                 }
             }
             flushGame(snapshot, false)
+
+            flushGameOperate([
+                {
+                    operateType: 'CHECK'
+                },
+                {
+                    operateType: 'RAISE',
+                    accessibleChips: [10,20,30,40,50]
+                }
+            ])
         }
-        // test()
+        //test()
     })
 </script>

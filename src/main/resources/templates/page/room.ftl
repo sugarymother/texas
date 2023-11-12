@@ -50,7 +50,7 @@
         </ul>
     </div>
     <div class="game_settings_area">
-        <div class="setting_acn"><b>Access Chips Num: </b><span>access chips num</span></div>
+        <div class="setting_acn"><b>Access Coins: </b><span>access chips num</span></div>
         <div class="setting_mlb"><b>Min Large Bet: </b><span>min large bet</span></div>
         <div class="setting_mb"><b>Max Bet: </b><span>max bet</span></div>
         <button id="openGameBtn" disabled>START GAME</button>
@@ -100,7 +100,7 @@
             let newItem = $(
                 '<li>' +
                     '<div class="user_name_slot"><b>name: </b><span>' + user.username + '</span></div>' +
-                    '<div class="user_chips_slot"><b>chips: </b><span>' + user.chips + '</span></div>' +
+                    '<div class="user_chips_slot"><b>coin: </b><span>' + user.chips + '</span></div>' +
                     '<div class="user_charge_slot"><b>charge times: </b><span>' + user.rechargeTimes + '</span></div>' +
                 '</li>'
             )

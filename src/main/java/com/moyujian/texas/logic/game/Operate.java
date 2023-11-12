@@ -1,5 +1,7 @@
 package com.moyujian.texas.logic.game;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,8 +11,10 @@ public class Operate {
 
     private OperateType operateType;
 
+    @JsonIgnore
     private int operateChips;
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private int[] accessibleChips;
 
     public Operate(OperateType type) {

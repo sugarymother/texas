@@ -29,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -103,8 +105,11 @@ public class WebSocketEndpoint {
 
     @OnError
     public void onError(Throwable error, Session session) throws IOException {
-        log.error("[ws] error occurred, session: {}, user: {} exception: {}",
-                session.getId(), JsonConvertUtil.toJSON(user), error.getMessage());
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        error.printStackTrace(printWriter);
+        log.error("[ws] error occurred, session: {}, user: {} exception: {}\n{}",
+                session.getId(), JsonConvertUtil.toJSON(user), error.getMessage(), stringWriter);
         session.close(new CloseReason(
                 CloseReason.CloseCodes.UNEXPECTED_CONDITION, ResponseStatus.ERROR_OCCURRED.getMsg()));
     }
