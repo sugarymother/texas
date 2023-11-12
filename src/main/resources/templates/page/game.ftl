@@ -123,7 +123,6 @@
     </ul>
     <div class="operate_area_box">
         <ul id="operateList">
-            yooo
         </ul>
     </div>
 </div>

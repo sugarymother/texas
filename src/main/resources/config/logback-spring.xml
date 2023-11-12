@@ -13,7 +13,6 @@
 
     <!-- 定义日志文件 输出位置 -->
     <property name="log.log_dir" value="log"/>
-    <property name="log.log_name" value="log"/>
     <!-- 日志最大的历史 30天 -->
     <property name="log.maxHistory" value="7"/>
     <property name="log.level" value="debug"/>
@@ -50,7 +49,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!--日志输出位置 可相对、和绝对路径 -->
             <fileNamePattern>
-                ${log.log_dir}/error/%d{yyyy-MM-dd}/error_${log.log_name}-%i.log
+                ${log.log_dir}/error/%d{yyyy-MM-dd}_error_%i.log
             </fileNamePattern>
             <!-- 可选节点，控制保留的归档文件的最大数量，超出数量就删除旧文件,假设设置每个月滚动，且<maxHistory>是6，
             则只保存最近6个月的文件，删除之前的旧文件。注意，删除旧文件是，那些为了归档而创建的目录也会被删除 -->
@@ -74,7 +73,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${log.log_dir}/warn/%d{yyyy-MM-dd}/warn_${log.log_name}-%i.log</fileNamePattern>
+            <fileNamePattern>${log.log_dir}/warn/%d{yyyy-MM-dd}_warn_%i.log</fileNamePattern>
             <maxHistory>${log.maxHistory}</maxHistory>
             <MaxFileSize>${log.maxSize}</MaxFileSize>
         </rollingPolicy>
@@ -91,7 +90,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${log.log_dir}/info/%d{yyyy-MM-dd}/info_${log.log_name}-%i.log</fileNamePattern>
+            <fileNamePattern>${log.log_dir}/info/%d{yyyy-MM-dd}_info_%i.log</fileNamePattern>
             <maxHistory>${log.maxHistory}</maxHistory>
             <MaxFileSize>${log.maxSize}</MaxFileSize>
         </rollingPolicy>
@@ -108,7 +107,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${log.log_dir}/debug/%d{yyyy-MM-dd}/debug_${log.log_name}-%i.log</fileNamePattern>
+            <fileNamePattern>${log.log_dir}/debug/%d{yyyy-MM-dd}_debug_%i.log</fileNamePattern>
             <maxHistory>${log.maxHistory}</maxHistory>
             <MaxFileSize>${log.maxSize}</MaxFileSize>
         </rollingPolicy>
